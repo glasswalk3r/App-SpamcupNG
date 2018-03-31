@@ -14,8 +14,8 @@ use Log::Log4perl 1.48 qw(get_logger :levels);
 use Carp;
 use HTML::TreeBuilder::XPath 0.14;
 
-our @EXPORT_OK =
-  qw(read_config main_loop get_browser %OPTIONS_MAP config_logger);
+our @EXPORT_OK
+    = qw(read_config main_loop get_browser %OPTIONS_MAP config_logger);
 our %OPTIONS_MAP = (
     'check_only' => 'n',
     'all'        => 'a',
@@ -83,8 +83,8 @@ sub read_config {
     # sanity checking
     for my $opt ( keys( %{ $data->{ExecutionOptions} } ) ) {
         die
-"$opt is not a valid option for configuration files. Check the documentation."
-          unless ( exists( $MAP{$opt} ) );
+            "$opt is not a valid option for configuration files. Check the documentation."
+            unless ( exists( $OPTIONS_MAP{$opt} ) );
     }
 
     for my $opt ( keys(%OPTIONS_MAP) ) {
@@ -190,9 +190,9 @@ L<Log::Log4perl> for more details about the levels.
 sub config_logger {
     my ( $level, $log_file ) = @_;
     croak "Must receive a string for the level parameter"
-      unless ( ( defined($level) ) and ( $level ne '' ) );
+        unless ( ( defined($level) ) and ( $level ne '' ) );
     croak "Must receive a string for the log file parameter"
-      unless ( ( defined($log_file) ) and ( $log_file ne '' ) );
+        unless ( ( defined($log_file) ) and ( $log_file ne '' ) );
 
 # :TODO:21/01/2018 12:07:01:ARFREITAS: Do we need to import :levels from Log::Log4perl at all?
     my %levels = (
@@ -203,7 +203,7 @@ sub config_logger {
         FATAL => $FATAL
     );
     croak "The value '$level' is not a valid value for level"
-      unless ( exists( $levels{$level} ) );
+        unless ( exists( $levels{$level} ) );
 
     my $conf;
 
@@ -292,8 +292,7 @@ sub _self_auth {
         $req->authorization_basic( $opts_ref->{ident}, $opts_ref->{pass} );
     }
     else {
-        $req =
-          HTTP::Request->new(
+        $req = HTTP::Request->new(
             GET => 'http://www.spamcop.net/?code=' . $opts_ref->{ident} );
     }
 
@@ -320,7 +319,7 @@ sub _self_auth {
         else {
             $logger->warn($res_status);
             $logger->fatal(
-'Cannot connect to server or invalid credentials. Please verify your username and password and try again.'
+                'Cannot connect to server or invalid credentials. Please verify your username and password and try again.'
             );
         }
     }
@@ -330,7 +329,7 @@ sub _self_auth {
     # Parse id for link
     if ( $content =~ $regexes{no_user_id} ) {
         $logger->logdie(
-'No userid found. Please check that you have entered correct code. Also consider obtaining a password to Spamcop.net instead of using the old-style authorization token.'
+            'No userid found. Please check that you have entered correct code. Also consider obtaining a password to Spamcop.net instead of using the old-style authorization token.'
         );
     }
 
@@ -416,7 +415,7 @@ sub main_loop {
     # avoid loops
     if ( ($last_seen) and ( $next_id eq $last_seen ) ) {
         $logger->fatal(
-"I have seen this ID earlier, we do not want to report it again. This usually happens because of a bug in Spamcup. Make sure you use latest version! You may also want to go check from Spamcop what is happening: http://www.spamcop.net/sc?id=$next_id"
+            "I have seen this ID earlier, we do not want to report it again. This usually happens because of a bug in Spamcup. Make sure you use latest version! You may also want to go check from Spamcop what is happening: http://www.spamcop.net/sc?id=$next_id"
         );
     }
 
@@ -430,8 +429,8 @@ sub main_loop {
     sleep $opts_ref->{delay};
 
     # Getting a SPAM report
-    my $req =
-      HTTP::Request->new( GET => 'http://www.spamcop.net/sc?id=' . $next_id );
+    my $req = HTTP::Request->new(
+        GET => 'http://www.spamcop.net/sc?id=' . $next_id );
 
     if ( $logger->is_debug ) {
         $logger->debug( "Request to be sent:\n" . $req->as_string );
@@ -482,13 +481,13 @@ sub main_loop {
 
     unless ($base_uri) {
         $logger->fatal(
-'No base URI found. Internal error? Please report this error by registering an issue on Github'
+            'No base URI found. Internal error? Please report this error by registering an issue on Github'
         );
     }
 
 # :TODO:07/02/2018 10:17:30:ARFREITAS: too many regexes being compiled repeated times, compile than once and reuse them later!
-    $res->content =~
-      /(\<form action[^>]+name=\"sendreport\"\>.*?\<\/form\>)/sgi;
+    $res->content
+        =~ /(\<form action[^>]+name=\"sendreport\"\>.*?\<\/form\>)/sgi;
     my $form_data = $1;
 
     if ( defined($form_data) ) {
@@ -504,9 +503,9 @@ sub main_loop {
     # :TODO:18/02/2018 14:19:49:ARFREITAS: refactor to make form parsing a sub
     my $form = HTML::Form->parse( $form_data, $base_uri );
 
-    if ( $res->content =~
-/Please make sure this email IS spam.*?size=2\>\n(.*?)\<a href\=\"\/sc\?id\=$next_id/sgi
-      )
+    if ( $res->content
+        =~ /Please make sure this email IS spam.*?size=2\>\n(.*?)\<a href\=\"\/sc\?id\=$next_id/sgi
+        )
     {
 
         if ( $logger->is_info ) {
@@ -524,7 +523,7 @@ sub main_loop {
         unless ($form) {
 
             $logger->fatal(
-'Could not find the HTML form to report the SPAM! May be a temporary Spamcop.net error, try again later! Quitting...'
+                'Could not find the HTML form to report the SPAM! May be a temporary Spamcop.net error, try again later! Quitting...'
             );
         }
         else {
@@ -539,7 +538,7 @@ sub main_loop {
             my $wontsend;
 
             # iterate targets
-            for ( my $i = 1 ; $i <= $max ; $i++ ) {
+            for ( my $i = 1; $i <= $max; $i++ ) {
                 my $send   = $form->value("send$i");
                 my $type   = $form->value("type$i");
                 my $master = $form->value("master$i");
@@ -550,11 +549,10 @@ sub main_loop {
                     $info =~ s/%([A-Fa-f\d]{2})/chr hex $1/eg;
                 }
 
-                if (
-                    $send
+                if ($send
                     and (  ( $send eq 'on' )
                         or ( $type =~ /^mole/ and $send == 1 ) )
-                  )
+                    )
                 {
                     $willsend .= "\t$master \t($info)\n";
                 }
@@ -565,8 +563,8 @@ sub main_loop {
 
             if ( $logger->is_info ) {
 
-                my $message =
-'Would send the report to the following addresses (reason in parenthesis): ';
+                my $message
+                    = 'Would send the report to the following addresses (reason in parenthesis): ';
 
                 if ($willsend) {
                     $message .= $willsend;
@@ -618,7 +616,7 @@ sub main_loop {
 # this happens rarely, but I've seen this; spamcop does not show preview headers for some reason
         unless ( $opts_ref->{stupid} ) {
             print
-"* Preview headers not available, but you can still report this. Are you sure this is spam? [y/N] ";
+                "* Preview headers not available, but you can still report this. Are you sure this is spam? [y/N] ";
 
             my $reply = <>;
             chomp($reply);
@@ -636,14 +634,14 @@ sub main_loop {
         }
 
     }
-    elsif ( $res->content =~
-/click reload if this page does not refresh automatically in \n(\d+) seconds/gs
-      )
+    elsif ( $res->content
+        =~ /click reload if this page does not refresh automatically in \n(\d+) seconds/gs
+        )
 
     {
         my $delay = $1;
         $logger->warn(
-"Spamcop seems to be currently overloaded. Trying again in $delay seconds. Wait..."
+            "Spamcop seems to be currently overloaded. Trying again in $delay seconds. Wait..."
         );
         sleep $opts_ref->{delay};
 
@@ -653,25 +651,25 @@ sub main_loop {
         # fake that everything is ok
         return 1;
     }
-    elsif ( $res->content =~
-        /No source IP address found, cannot proceed. Not full header/gs )
+    elsif ( $res->content
+        =~ /No source IP address found, cannot proceed. Not full header/gs )
     {
         $logger->warn(
-'No source IP address found. Your report might be missing headers. Skipping.'
+            'No source IP address found. Your report might be missing headers. Skipping.'
         );
         return 0;
     }
     else {
-        # Shit happens. If you know it should be parseable, please report a bug!
+      # Shit happens. If you know it should be parseable, please report a bug!
         $logger->warn(
-"Can't parse Spamcop.net's HTML. If this does not happen very often you can ignore this warning. Otherwise check if there's new version available. Skipping."
+            "Can't parse Spamcop.net's HTML. If this does not happen very often you can ignore this warning. Otherwise check if there's new version available. Skipping."
         );
         return 0;
     }
 
     if ( $opts_ref->{check_only} ) {
         $logger->info(
-'You gave option -n, so we\'ll stop here. The SPAM was NOT reported.'
+            'You gave option -n, so we\'ll stop here. The SPAM was NOT reported.'
         );
         exit;
     }
@@ -690,12 +688,12 @@ sub main_loop {
         }
         sleep $opts_ref->{delay};
         $res = LWP::UserAgent->new->request( $form->click() )
-          ;                # click default button, submit
+            ;              # click default button, submit
     }
     else {                 # CANCEL SPAM
         $logger->debug('About to cancel report.');
         $res = LWP::UserAgent->new->request( $form->click('cancel') )
-          ;                # click cancel button
+            ;              # click cancel button
     }
 
     if ( $logger->is_debug ) {
@@ -704,7 +702,8 @@ sub main_loop {
 
     # Check the outcome of the response
     unless ( $res->is_success ) {
-        $logger->fatal('Cannot connect to server. Try again later. Quitting.');
+        $logger->fatal(
+            'Cannot connect to server. Try again later. Quitting.');
         return 0;
     }
 
@@ -730,7 +729,7 @@ sub main_loop {
     }
     else {
         $logger->warn(
-'Spamcop.net returned unexpected content (no SPAM report id). If this does not happen very often you can ignore this. Otherwise check if there new version available. Continuing.'
+            'Spamcop.net returned unexpected content (no SPAM report id). If this does not happen very often you can ignore this. Otherwise check if there new version available. Continuing.'
         );
     }
 
@@ -738,7 +737,8 @@ sub main_loop {
     if ( $logger->is_info ) {
 
         if ($report) {
-            $logger->info("Spamcop.net sent following SPAM reports:\n$report");
+            $logger->info(
+                "Spamcop.net sent following SPAM reports:\n$report");
         }
 
         $logger->info('Finished processing.');
@@ -771,14 +771,14 @@ E<lt>arfreitas@cpan.orgE<gt>
 
 This file is part of App-SpamcupNG distribution.
 
-App-SpamcupNG is free software: you can redistribute it and/or modify it under the
-terms of the GNU General Public License as published by the Free Software
+App-SpamcupNG is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
 Foundation, either version 3 of the License, or (at your option) any later
 version.
 
-App-SpamcupNG is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE. See the GNU General Public License for more details.
+App-SpamcupNG is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
 App-SpamcupNG. If not, see <http://www.gnu.org/licenses/>.

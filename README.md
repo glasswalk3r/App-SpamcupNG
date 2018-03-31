@@ -10,7 +10,7 @@ App-SpamcupNG is a fork from the original Spamcup project.
 
 Spamcup is copyright (C) Toni Willberg <toniw@iki.fi>.
 
-# INTRO
+## INTRO
 
 In your favorite shell:
 
@@ -56,7 +56,7 @@ for more details on that.
 
 You will need administrator rights to install this globally unless you're lucky to be on a UNIX-like OS and you install your own Perl interpreter (like those installed by [perlbrew](https://perlbrew.pl/)).
 
-# CONFIGURATION FILE
+## CONFIGURATION FILE
 
 You can also provide a configuration file to avoid having to provide the same information everytime you want to execute the program.
 
