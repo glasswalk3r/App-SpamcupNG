@@ -1,3 +1,6 @@
+## Please see file perltidy.ERR
+## Please see file perltidy.ERR
+## Please see file perltidy.ERR
 package App::SpamcupNG;
 use warnings;
 use strict;
@@ -5,7 +8,7 @@ use LWP::UserAgent 6.05;
 use HTML::Form 6.07;
 use HTTP::Cookies 6.01;
 use Getopt::Std;
-use HTML::Entities 3.69;
+use HTML::Entities 3.76;
 use YAML::XS 0.62 qw(LoadFile);
 use File::Spec;
 use Hash::Util qw(lock_hash);
@@ -429,12 +432,26 @@ sub _find_best_contacts {
 # TODO: parse this without regex
 sub _spam_header {
     my $raw_spam_header = shift;
-    my $spam_header     = decode_entities($raw_spam_header);
-    $spam_header =~ s/\n/\t/igs;         # prepend a tab to each line
-    $spam_header =~ s/<\/?strong>//gi;
-    $spam_header =~ s/<br>/\n/gsi;
-    $spam_header =~ s/<\/?font>//gi;
-    return $spam_header;
+    my $formatted //= 0;
+    my $tree = HTML::TreeBuilder::XPath->new;
+    $tree->parse_content($raw_spam_header);
+    my @nodes = $tree->findnodes_as_strings('//text()');
+    my @lines;
+
+    for ( my $i = 0 ; $i <= scalar(@nodes) ; $i++ ) {
+        next unless $nodes[$i];
+        $nodes[$i] =~ s/^\s++//u;
+
+        if ($formatted) {
+            push( @lines, "\t$nodes[$i]" );
+
+        }
+        else {
+            push( @lines, $nodes[$i] );
+
+        }
+    }
+    return \@lines;
 }
 
 sub main_loop {
@@ -554,8 +571,9 @@ sub main_loop {
     {
 
         if ( $logger->is_info ) {
-            my $spam_header = _spam_header($1);
-            $logger->info("Head of the SPAM follows:\n$spam_header");
+            my $spam_header_ref = _spam_header($1);
+            my $as_string       = join( "\n", @$spam_header_ref );
+            $logger->info("Head of the SPAM follows:\n$as_string");
         }
 
         # parse form fields
