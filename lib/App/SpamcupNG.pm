@@ -13,9 +13,10 @@ use Exporter 'import';
 use Log::Log4perl 1.48 qw(get_logger :levels);
 use Carp;
 use HTML::TreeBuilder::XPath 0.14;
+use constant TARGET_HTML_FORM => 'sendreport';
 
 our @EXPORT_OK =
-  qw(read_config main_loop get_browser %OPTIONS_MAP config_logger);
+  qw(read_config main_loop get_browser %OPTIONS_MAP config_logger TARGET_HTML_FORM);
 our %OPTIONS_MAP = (
     'check_only' => 'n',
     'all'        => 'a',
@@ -107,8 +108,6 @@ sub read_config {
 
     return $data->{Accounts};
 }
-
-use constant TARGET_HTML_FORM => 'sendreport';
 
 sub report_form {
     my ( $html_doc, $base_uri ) = @_;
@@ -374,6 +373,7 @@ sub _check_next_id {
     return $next_id;
 }
 
+# TODO: create a single tree instance and check for everything at once
 sub _check_warning {
     my $content_ref = shift;
     my $tree        = HTML::TreeBuilder::XPath->new;
@@ -402,9 +402,45 @@ sub _check_error {
     }
 }
 
+sub find_best_contacts {
+    my $content_ref = shift;
+    my $tree        = HTML::TreeBuilder::XPath->new;
+    $tree->parse_content($$content_ref);
+    my @nodes = $tree->findnodes('//div[@id="content"]');
+
+    foreach my $node (@nodes) {
+        for my $html_element ( $node->content_list ) {
+
+            # only text
+            next if ref($html_element);
+            $html_element =~ s/^\s+//;
+            if ( index( $html_element, 'Using best contacts' ) == 0 ) {
+                my @tokens = split( /\s/, $html_element );
+                splice( @tokens, 0, 3 );
+                return \@tokens;
+            }
+        }
+
+    }
+
+    return [];
+}
+
+# TODO: parse this without regex
+sub spam_header {
+    my $raw_spam_header = shift;
+    my $spam_header     = decode_entities($raw_spam_header);
+    $spam_header =~ s/\n/\t/igs;         # prepend a tab to each line
+    $spam_header =~ s/<\/?strong>//gi;
+    $spam_header =~ s/<br>/\n/gsi;
+    $spam_header =~ s/<\/?font>//gi;
+    return $spam_header;
+}
+
 sub main_loop {
     my ( $ua, $opts_ref ) = @_;
     my $logger = get_logger('SpamcupNG');
+    binmode( STDOUT, ":utf8" );
 
     # last seen SPAM id
     my $last_seen;
@@ -490,7 +526,7 @@ sub main_loop {
         }
     }
 
-    # parse the spam
+    # parsing the SPAM
     my $_cancel  = 0;
     my $base_uri = $res->base();
 
@@ -504,23 +540,13 @@ sub main_loop {
         $logger->debug("Base URI is $base_uri");
     }
 
-# :TODO:07/02/2018 10:17:30:ARFREITAS: too many regexes being compiled repeated times, compile than once and reuse them later!
-    $res->content =~
-      /(\<form action[^>]+name=\"sendreport\"\>.*?\<\/form\>)/sgi;
-    my $form_data = $1;
-
-    if ( defined($form_data) ) {
-        $form_data = "<html><body>$1</body></html>";
-    }
-    else {
-        $logger->error('Could not parse form data from HTTP response');
-
-        # :WORKAROUND:18/02/2018 14:20:17:ARFREITAS: to avoid warnings
-        $form_data = '';
+    if ( $logger->is_info ) {
+        my $best_ref     = find_best_contacts( $res->content );
+        my $best_as_text = join( ', ', @$best_ref );
+        $logger->info("Best contacts for SPAM reporting: $best_as_text");
     }
 
-    # :TODO:18/02/2018 14:19:49:ARFREITAS: refactor to make form parsing a sub
-    my $form = HTML::Form->parse( $form_data, $base_uri );
+    my $form = report_form( $res->content, $base_uri );
 
     if ( $res->content =~
 /Please make sure this email IS spam.*?size=2\>\n(.*?)\<a href\=\"\/sc\?id\=$next_id/sgi
@@ -528,13 +554,8 @@ sub main_loop {
     {
 
         if ( $logger->is_info ) {
-            my $spamhead = decode_entities($1);
-            $spamhead =~ s/\n/\t/igs;         # prepend a tab to each line
-            $spamhead =~ s/<\/?strong>//gi;
-            $spamhead =~ s/<br>/\n/gsi;
-            $spamhead =~ s/<\/?font>//gi;
-            binmode( STDOUT, ":utf8" );
-            $logger->info("Head of the SPAM follows:\n$spamhead");
+            my $spam_header = spam_header($1);
+            $logger->info("Head of the SPAM follows:\n$spam_header");
         }
 
         # parse form fields
@@ -631,9 +652,10 @@ sub main_loop {
         }
 
     }
-    elsif ( $res->content =~ /Send Spam Report\(S\) Now/gi ) {
 
 # this happens rarely, but I've seen this; spamcop does not show preview headers for some reason
+    elsif ( $res->content =~ /Send Spam Report\(S\) Now/gi ) {
+
         unless ( $opts_ref->{stupid} ) {
             print
 "* Preview headers not available, but you can still report this. Are you sure this is spam? [y/N] ";
