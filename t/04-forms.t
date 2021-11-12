@@ -6,8 +6,8 @@ use File::Spec;
 use Log::Log4perl qw(:easy);
 Log::Log4perl->easy_init($WARN);
 
-use constant BASE_URI =>
-  'http://www.spamcop.net/sc?id=z6728954861zb68b40f5446eed4c8aad536ab243baa1z';
+# perltidy not very happy with a long ID
+use constant BASE_URI => 'http://www.spamcop.net/sc?id=z6728954861zb68b40';
 
 note('Parsing an OK HTML document with report submission form');
 my $html_doc = read_html('sendreport_form_ok.html');
