@@ -109,7 +109,7 @@ sub read_config {
     return $data->{Accounts};
 }
 
-sub report_form {
+sub _report_form {
     my ( $html_doc, $base_uri ) = @_;
     my @forms = HTML::Form->parse( $html_doc, $base_uri );
 
@@ -402,10 +402,10 @@ sub _check_error {
     }
 }
 
-sub find_best_contacts {
+sub _find_best_contacts {
     my $content_ref = shift;
     my $tree        = HTML::TreeBuilder::XPath->new;
-    $tree->parse_content($$content_ref);
+    $tree->parse_content($content_ref);
     my @nodes = $tree->findnodes('//div[@id="content"]');
 
     foreach my $node (@nodes) {
@@ -427,7 +427,7 @@ sub find_best_contacts {
 }
 
 # TODO: parse this without regex
-sub spam_header {
+sub _spam_header {
     my $raw_spam_header = shift;
     my $spam_header     = decode_entities($raw_spam_header);
     $spam_header =~ s/\n/\t/igs;         # prepend a tab to each line
@@ -541,12 +541,12 @@ sub main_loop {
     }
 
     if ( $logger->is_info ) {
-        my $best_ref     = find_best_contacts( $res->content );
+        my $best_ref     = _find_best_contacts( $res->content );
         my $best_as_text = join( ', ', @$best_ref );
         $logger->info("Best contacts for SPAM reporting: $best_as_text");
     }
 
-    my $form = report_form( $res->content, $base_uri );
+    my $form = _report_form( $res->content, $base_uri );
 
     if ( $res->content =~
 /Please make sure this email IS spam.*?size=2\>\n(.*?)\<a href\=\"\/sc\?id\=$next_id/sgi
@@ -554,7 +554,7 @@ sub main_loop {
     {
 
         if ( $logger->is_info ) {
-            my $spam_header = spam_header($1);
+            my $spam_header = _spam_header($1);
             $logger->info("Head of the SPAM follows:\n$spam_header");
         }
 
