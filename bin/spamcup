@@ -279,14 +279,14 @@ Compatibility with the original Spamcup project: you can reuse your configuratio
 
 =head2 MOTIVATIONS
 
-The motivations for this distribution where inquired while comparing it to L<WWW::Mechanize::SpamCop>. Here is the rationale:
+The motivations for this distribution might be inquired while comparing it to L<WWW::Mechanize::SpamCop>. Here is the rationale:
 
 =over
 
 =item Compatible with Spamcup
 
 App-SpamcupNG is a directly replacement for Spamcup original project. I used myself Spamcup for years and never had an issue, since the Spamcop.net
-webpage didn't change at all. The reasons for writing a replacement was to be able to use multiple accounts in the configuration file.
+webpage didn't change that much. The reasons for writing a replacement was to be able to use multiple accounts in the configuration file.
 
 That said, you can use the same configuration file you have for Spamcup, with small changes.
 
