@@ -1,6 +1,3 @@
-## Please see file perltidy.ERR
-## Please see file perltidy.ERR
-## Please see file perltidy.ERR
 package App::SpamcupNG;
 use warnings;
 use strict;
