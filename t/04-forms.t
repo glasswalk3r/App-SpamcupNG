@@ -2,8 +2,11 @@ use warnings;
 use strict;
 use Test::More;
 use App::SpamcupNG qw(TARGET_HTML_FORM);
-use File::Spec;
 use Log::Log4perl qw(:easy);
+
+use lib './t';
+use Fixture 'read_html';
+
 Log::Log4perl->easy_init($WARN);
 
 # perltidy not very happy with a long ID
@@ -31,14 +34,3 @@ is_deeply(
 );
 
 done_testing;
-
-sub read_html {
-    my $html_file = shift;
-    my $full_path = File::Spec->catfile( ( 't', 'responses' ), $html_file );
-    open( my $in, '<', $full_path ) or die "Cannot read $full_path: $!";
-    local $/ = undef;
-    my $content = <$in>;
-    close($in);
-    return \$content;
-}
-

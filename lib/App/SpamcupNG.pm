@@ -426,7 +426,6 @@ sub _find_best_contacts {
     return [];
 }
 
-# TODO: parse this without regex
 sub _spam_header {
     my $raw_spam_header = shift;
     my $formatted //= 0;
