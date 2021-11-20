@@ -13,6 +13,10 @@ use Exporter 'import';
 use Log::Log4perl 1.48 qw(get_logger :levels);
 use Carp;
 use HTML::TreeBuilder::XPath 0.14;
+
+use App::SpamcupNG::HTMLParse
+  qw(find_spam_header find_next_id find_errors find_warnings);
+
 use constant TARGET_HTML_FORM => 'sendreport';
 
 our @EXPORT_OK =
@@ -356,52 +360,6 @@ sub _self_auth {
 
 }
 
-sub _check_next_id {
-    my $content_ref = shift;
-    my $next_id;
-    my $logger = get_logger('SpamcupNG');
-
-    if ( $$content_ref =~ $regexes{next_id} ) {
-        $next_id = $1;
-        $logger->info("ID of the next SPAM is '$next_id'");
-    }
-    else {
-        # userid ok, no new spam
-        $logger->info('No unreported SPAM found.');
-    }
-
-    return $next_id;
-}
-
-# TODO: create a single tree instance and check for everything at once
-sub _check_warning {
-    my $content_ref = shift;
-    my $tree        = HTML::TreeBuilder::XPath->new;
-    $tree->parse_content($$content_ref);
-    my @errors = $tree->findnodes('//div[@id="content"]/div[@class="warn"]');
-
-    if ( scalar(@errors) > 0 ) {
-        return $errors[0]->as_trimmed_text;
-    }
-    else {
-        return;
-    }
-}
-
-sub _check_error {
-    my $content_ref = shift;
-    my $tree        = HTML::TreeBuilder::XPath->new;
-    $tree->parse_content($$content_ref);
-    my @errors = $tree->findnodes('//div[@id="content"]/div[@class="error"]');
-
-    if ( scalar(@errors) > 0 ) {
-        return $errors[0]->as_trimmed_text;
-    }
-    else {
-        return;
-    }
-}
-
 sub _find_best_contacts {
     my $content_ref = shift;
     my $tree        = HTML::TreeBuilder::XPath->new;
@@ -426,30 +384,6 @@ sub _find_best_contacts {
     return [];
 }
 
-sub _spam_header {
-    my $raw_spam_header = shift;
-    my $formatted //= 0;
-    my $tree = HTML::TreeBuilder::XPath->new;
-    $tree->parse_content($raw_spam_header);
-    my @nodes = $tree->findnodes_as_strings('//text()');
-    my @lines;
-
-    for ( my $i = 0 ; $i <= scalar(@nodes) ; $i++ ) {
-        next unless $nodes[$i];
-        $nodes[$i] =~ s/^\s++//u;
-
-        if ($formatted) {
-            push( @lines, "\t$nodes[$i]" );
-
-        }
-        else {
-            push( @lines, $nodes[$i] );
-
-        }
-    }
-    return \@lines;
-}
-
 sub main_loop {
     my ( $ua, $opts_ref ) = @_;
     my $logger = get_logger('SpamcupNG');
@@ -469,7 +403,7 @@ sub main_loop {
     my $next_id;
 
     if ($response) {
-        $next_id = _check_next_id( \$response );
+        $next_id = find_next_id( \$response );
         return -1 unless ( defined($next_id) );
     }
     else {
@@ -511,32 +445,38 @@ sub main_loop {
         return 0;
     }
 
-    if ( my $warn_msg = _check_warning( \( $res->content ) ) ) {
-        $logger->warn($warn_msg);
+    if ( my $warns_ref = find_warnings( \( $res->content ) ) ) {
+        foreach my $warning ( @{$warns_ref} ) {
+            $logger->warn($warning);
+        }
     }
 
-    if ( my $error_msg = _check_error( \( $res->content ) ) ) {
+    if ( my $errors_ref = find_errors( \( $res->content ) ) ) {
 
-        my $is_fatal = 0;
+        foreach my $error ( @{$errors_ref} ) {
+            my $is_fatal = 0;
 
-        for my $fatal_error ( keys(%fatal_errors) ) {
+            foreach my $fatal_error ( keys(%fatal_errors) ) {
 
-            if ( $error_msg =~ $fatal_errors{$fatal_error} ) {
-                $is_fatal = 1;
-                last;
+                if ( $error =~ $fatal_errors{$fatal_error} ) {
+                    $is_fatal = 1;
+                    last;
+                }
+
+            }
+
+            if ($is_fatal) {
+                $logger->fatal($error);
+
+                # must stop processing the HTML for this report and move to next
+                return 0;
+            }
+            else {
+                $logger->error($error);
             }
 
         }
 
-        if ($is_fatal) {
-            $logger->fatal($error_msg);
-
-            # must stop processing the HTML for this report and move to next
-            return 0;
-        }
-        else {
-            $logger->error($error_msg);
-        }
     }
 
     # parsing the SPAM
@@ -567,7 +507,7 @@ sub main_loop {
     {
 
         if ( $logger->is_info ) {
-            my $spam_header_ref = _spam_header($1);
+            my $spam_header_ref = find_spam_header($1);
             my $as_string       = join( "\n", @$spam_header_ref );
             $logger->info("Head of the SPAM follows:\n$as_string");
         }

@@ -4,13 +4,38 @@ use warnings;
 use HTML::TreeBuilder::XPath 0.14;
 use Exporter 'import';
 
-our @EXPORT_OK = qw(find_next_id find_errors find_warnings);
+our @EXPORT_OK = qw(find_next_id find_errors find_warnings find_spam_header);
 
 my %regexes = (
     no_user_id => qr/\>No userid found\</i,
     next_id    => qr/sc\?id\=(.*?)\"\>/i,
     http_500   => qr/500/,
 );
+
+=head1 NAME
+
+App::SpamcupNG::HTMLParse - function to extract information from Spamcop.net web pages
+
+=head1 SYNOPSIS
+
+    use App::SpamcupNG::HTMLParse qw(find_next_id find_errors find_warnings find_spam_header);
+
+=head1 DESCRIPTION
+
+This package export functions that uses XPath to extract specific information
+from the spamcop.net HTML pages.
+
+=head1 EXPORTS
+
+=head2 find_next_id
+
+Expects as parameter a scalar reference of the HTML page.
+
+Tries to find the SPAM ID used to identify SPAM reports on spamcop.net webpage.
+
+Returns the ID if found, otherwise C<undef>.
+
+=cut
 
 # TODO: use XPath instead of regex
 sub find_next_id {
@@ -24,12 +49,23 @@ sub find_next_id {
     return $next_id;
 }
 
+=head2 find_warnings
+
+Expects as parameter a scalar reference of the HTML page.
+
+Tries to find all warnings on the HTML, based on CSS classes.
+
+Returns an array reference with all warnings found.
+
+=cut
+
 # TODO: create a single tree instance and check for everything at once
 sub find_warnings {
     my $content_ref = shift;
     my $tree        = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($$content_ref);
-    my @nodes = $tree->findnodes('//div[@id="content"]/div[@class="warning"]');
+    my @nodes
+        = $tree->findnodes('//div[@id="content"]/div[@class="warning"]');
     my @warnings;
 
     foreach my $node (@nodes) {
@@ -38,6 +74,16 @@ sub find_warnings {
 
     return \@warnings;
 }
+
+=head2 find_errors
+
+Expects as parameter a scalar reference of the HTML page.
+
+Tries to find all errors on the HTML, based on CSS classes.
+
+Returns an array reference with all errors found.
+
+=cut
 
 sub find_errors {
     my $content_ref = shift;
@@ -52,6 +98,19 @@ sub find_errors {
 
     return \@errors;
 }
+
+=head2 find_best_contacts
+
+Expects as parameter a scalar reference of the HTML page.
+
+Tries to find all best contacts on the HTML, based on CSS classes.
+
+The best contacts are the e-mail address that Spamcop considers appropriate to
+use for SPAM reporting.
+
+Returns an array reference with all best contacts found.
+
+=cut
 
 sub find_best_contacts {
     my $content_ref = shift;
@@ -77,6 +136,16 @@ sub find_best_contacts {
     return [];
 }
 
+=head2 find_spam_header
+
+Expects as parameter a scalar reference of the HTML page.
+
+Tries to find the e-mail header of the SPAM reported.
+
+Returns an array reference with all the lines of the e-mail header found.
+
+=cut
+
 sub find_spam_header {
     my $raw_spam_header = shift;
     my $formatted //= 0;
@@ -85,7 +154,7 @@ sub find_spam_header {
     my @nodes = $tree->findnodes_as_strings('//text()');
     my @lines;
 
-    for ( my $i = 0 ; $i <= scalar(@nodes) ; $i++ ) {
+    for ( my $i = 0; $i <= scalar(@nodes); $i++ ) {
         next unless $nodes[$i];
         $nodes[$i] =~ s/^\s++//u;
 
@@ -100,5 +169,40 @@ sub find_spam_header {
     }
     return \@lines;
 }
+
+=head1 SEE ALSO
+
+=over
+
+=item *
+
+L<HTML::TreeBuilder::XPath>
+
+=back
+
+=head1 AUTHOR
+
+Alceu Rodrigues de Freitas Junior, E<lt>arfreitas@cpan.orgE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2018 of Alceu Rodrigues de Freitas Junior,
+E<lt>arfreitas@cpan.orgE<gt>
+
+This file is part of App-SpamcupNG distribution.
+
+App-SpamcupNG is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+App-SpamcupNG is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+App-SpamcupNG. If not, see <http://www.gnu.org/licenses/>.
+
+=cut
 
 1;
