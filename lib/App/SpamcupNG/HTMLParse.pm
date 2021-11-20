@@ -14,7 +14,8 @@ my %regexes = (
 
 =head1 NAME
 
-App::SpamcupNG::HTMLParse - function to extract information from Spamcop.net web pages
+App::SpamcupNG::HTMLParse - function to extract information from Spamcop.net
+web pages
 
 =head1 SYNOPSIS
 

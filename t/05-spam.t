@@ -24,6 +24,6 @@ is( ref($parsed), 'ARRAY',
     'result from find_spam_header is an array reference' );
 
 is_deeply( $parsed, $expected, 'result has the expected structure' )
-  or diag( explain($parsed) );
+    or diag( explain($parsed) );
 
 done_testing;
