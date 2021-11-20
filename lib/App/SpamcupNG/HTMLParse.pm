@@ -12,6 +12,8 @@ my %regexes = (
     http_500   => qr/500/,
 );
 
+# VERSION
+
 =head1 NAME
 
 App::SpamcupNG::HTMLParse - function to extract information from Spamcop.net
