@@ -4,7 +4,7 @@ use warnings;
 use HTML::TreeBuilder::XPath 0.14;
 use Exporter 'import';
 
-our @EXPORT_OK = qw(find_next_id find_errors);
+our @EXPORT_OK = qw(find_next_id find_errors find_warnings);
 
 my %regexes = (
     no_user_id => qr/\>No userid found\</i,
@@ -29,28 +29,28 @@ sub find_warnings {
     my $content_ref = shift;
     my $tree        = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($$content_ref);
-    my @errors = $tree->findnodes('//div[@id="content"]/div[@class="warn"]');
+    my @nodes = $tree->findnodes('//div[@id="content"]/div[@class="warning"]');
+    my @warnings;
 
-    if ( scalar(@errors) > 0 ) {
-        return $errors[0]->as_trimmed_text;
+    foreach my $node (@nodes) {
+        push( @warnings, $node->as_trimmed_text );
     }
-    else {
-        return;
-    }
+
+    return \@warnings;
 }
 
 sub find_errors {
     my $content_ref = shift;
     my $tree        = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($$content_ref);
-    my @errors = $tree->findnodes('//div[@id="content"]/div[@class="error"]');
+    my @nodes = $tree->findnodes('//div[@id="content"]/div[@class="error"]');
+    my @errors;
 
-    if ( scalar(@errors) > 0 ) {
-        return $errors[0]->as_trimmed_text;
+    foreach my $node (@nodes) {
+        push( @errors, $node->as_trimmed_text );
     }
-    else {
-        return;
-    }
+
+    return \@errors;
 }
 
 sub find_best_contacts {
