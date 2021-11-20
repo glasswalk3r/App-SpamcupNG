@@ -6,8 +6,7 @@ use App::SpamcupNG::HTMLParse qw(find_next_id find_errors find_warnings);
 use lib './t';
 use Fixture 'read_html';
 
-is(
-    find_next_id( read_html('after_login.html') ),
+is( find_next_id( read_html('after_login.html') ),
     'z6444645586z5cebd61f7e0464abe28f045afff01b9dz',
     'got the expected next SPAM id'
 );
@@ -28,8 +27,7 @@ is( ref($errors_ref), 'ARRAY',
 
 is_deeply(
     $errors_ref,
-    [
-        'Mailhost configuration problem, identified internal IP as source',
+    [   'Mailhost configuration problem, identified internal IP as source',
         'No source IP address found, cannot proceed.',
         'Nothing to do.'
     ],
@@ -38,8 +36,7 @@ is_deeply(
 
 is_deeply(
     find_warnings( read_html('sendreport_form_ok.html') ),
-    [
-'Possible forgery. Supposed receiving system not associated with any of your mailhosts',
+    [   'Possible forgery. Supposed receiving system not associated with any of your mailhosts',
         'Yum, this spam is fresh!'
     ],
     'get the expected warnings'
