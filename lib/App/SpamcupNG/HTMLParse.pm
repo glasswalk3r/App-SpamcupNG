@@ -4,8 +4,11 @@ use warnings;
 use HTML::TreeBuilder::XPath 0.14;
 use Exporter 'import';
 
-our @EXPORT_OK
-    = qw(find_next_id find_errors find_warnings find_spam_header find_best_contacts);
+our @EXPORT_OK = (
+    'find_next_id',       'find_errors',
+    'find_warnings',      'find_spam_header',
+    'find_best_contacts', 'find_receivers'
+);
 
 my %regexes = (
     no_user_id => qr/\>No userid found\</i,
@@ -144,6 +147,9 @@ sub find_best_contacts {
 
 Expects as parameter a scalar reference of the HTML page.
 
+You can optionally pass a second parameter that defines if each line should be
+prefixed with a tab character. The default value is false.
+
 Tries to find the e-mail header of the SPAM reported.
 
 Returns an array reference with all the lines of the e-mail header found.
@@ -172,6 +178,38 @@ sub find_spam_header {
         }
     }
     return \@lines;
+}
+
+=head2 find_receivers
+
+Expects as parameter a scalar reference of the HTML page.
+
+Tries to find all the receivers of the SPAM report, even if those were not real
+e-mail address, only internal identifiers for Spamcop to store statistics.
+
+Returns an array reference, where each item is a string.
+
+=cut
+
+sub find_receivers {
+    my $content_ref = shift;
+    my $tree        = HTML::TreeBuilder::XPath->new;
+    $tree->parse_content($content_ref);
+    my @nodes = $tree->findnodes('//*[@id="content"]');
+    my @receivers;
+
+    foreach my $node (@nodes) {
+        foreach my $inner ( $node->content_list() ) {
+
+            # we just want text nodes, everything else is discarded
+            next if ( ref($inner) );
+            $inner =~ s/^\s+//;
+            $inner =~ s/\s+$//;
+            push( @receivers, $inner );
+        }
+    }
+
+    return \@receivers;
 }
 
 =head1 SEE ALSO

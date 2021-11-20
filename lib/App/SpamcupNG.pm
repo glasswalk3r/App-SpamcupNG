@@ -5,17 +5,18 @@ use LWP::UserAgent 6.05;
 use HTML::Form 6.07;
 use HTTP::Cookies 6.01;
 use Getopt::Std;
-use HTML::Entities 3.76;
 use YAML::XS 0.62 qw(LoadFile);
 use File::Spec;
 use Hash::Util qw(lock_hash);
 use Exporter 'import';
 use Log::Log4perl 1.48 qw(get_logger :levels);
 use Carp;
-use HTML::TreeBuilder::XPath 0.14;
 
-use App::SpamcupNG::HTMLParse
-    qw(find_spam_header find_next_id find_errors find_warnings find_best_contacts);
+use App::SpamcupNG::HTMLParse (
+    'find_next_id',       'find_errors',
+    'find_warnings',      'find_spam_header',
+    'find_best_contacts', 'find_receivers'
+);
 
 use constant TARGET_HTML_FORM => 'sendreport';
 
@@ -470,7 +471,7 @@ sub main_loop {
     }
 
     if ( $logger->is_info ) {
-        my $best_ref     = _find_best_contacts( $res->content );
+        my $best_ref     = find_best_contacts( $res->content );
         my $best_as_text = join( ', ', @$best_ref );
         $logger->info("Best contacts for SPAM reporting: $best_as_text");
     }
@@ -679,41 +680,35 @@ sub main_loop {
     }
 
     if ($_cancel) {
-        return 1;    # user decided this mail is not spam
+        return 1;    # user decided this mail is not SPAM
     }
 
-    # parse respond
-    my $report;
+    # parse response
+    my $receivers_ref = find_receivers( $res->content );
 
-    if ( $res->content =~ /(Spam report id .*?)\<p\>/gsi ) {
-        $report = $1 || "-none-\n";
-        $report =~ s/\<br\>//gi;
-    }
-    elsif ( $res->content =~ /report for mole\@devnull.spamcop.net/ ) {
-        $report = 'Mole report(s)';
-    }
-    elsif ( $res->content =~ /\/dev\/null/ ) {
-        my $tree = HTML::TreeBuilder::XPath->new;
-        $tree->parse_content( $res->content );
-        my @dev_nulling = $tree->findnodes('//*[@id="content"]');
-        $report = $dev_nulling[0]->as_trimmed_text;
-    }
-    else {
-        $logger->warn(
-            'Spamcop.net returned unexpected content (no SPAM report id). If this does not happen very often you can ignore this. Otherwise check if there new version available. Continuing.'
-        );
-    }
+    if ( scalar( @{$receivers_ref} ) > 0 ) {
 
-    # print the report
-    if ( $logger->is_info ) {
+        # print the report
+        if ( $logger->is_info ) {
 
-        if ($report) {
+            my $report = join( "\n", @{$receivers_ref} );
             $logger->info(
                 "Spamcop.net sent following SPAM reports:\n$report");
+
+            $logger->info('Finished processing.');
         }
 
-        $logger->info('Finished processing.');
-
+    }
+    else {
+        my $msg = <<'EOM';
+Spamcop.net returned unexpected content (no SPAM report id, no receiver).
+Please make check if there new version of App-SpamcupNG available and upgrade it.
+If you already have the latest version, please open a bug report in the
+App-SpamcupNG homepage and provide the next lines with the HTML response
+provided by Spamcop.
+EOM
+        $logger->warn($msg);
+        $logger->warn( $res->content );
     }
 
     return 1;
