@@ -4,7 +4,8 @@ use warnings;
 use HTML::TreeBuilder::XPath 0.14;
 use Exporter 'import';
 
-our @EXPORT_OK = qw(find_next_id find_errors find_warnings find_spam_header);
+our @EXPORT_OK
+    = qw(find_next_id find_errors find_warnings find_spam_header find_best_contacts);
 
 my %regexes = (
     no_user_id => qr/\>No userid found\</i,

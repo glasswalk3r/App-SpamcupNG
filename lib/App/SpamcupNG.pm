@@ -15,7 +15,7 @@ use Carp;
 use HTML::TreeBuilder::XPath 0.14;
 
 use App::SpamcupNG::HTMLParse
-    qw(find_spam_header find_next_id find_errors find_warnings);
+    qw(find_spam_header find_next_id find_errors find_warnings find_best_contacts);
 
 use constant TARGET_HTML_FORM => 'sendreport';
 
@@ -358,30 +358,6 @@ sub _self_auth {
         return undef;
     }
 
-}
-
-sub _find_best_contacts {
-    my $content_ref = shift;
-    my $tree        = HTML::TreeBuilder::XPath->new;
-    $tree->parse_content($content_ref);
-    my @nodes = $tree->findnodes('//div[@id="content"]');
-
-    foreach my $node (@nodes) {
-        for my $html_element ( $node->content_list ) {
-
-            # only text
-            next if ref($html_element);
-            $html_element =~ s/^\s+//;
-            if ( index( $html_element, 'Using best contacts' ) == 0 ) {
-                my @tokens = split( /\s/, $html_element );
-                splice( @tokens, 0, 3 );
-                return \@tokens;
-            }
-        }
-
-    }
-
-    return [];
 }
 
 sub main_loop {

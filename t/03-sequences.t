@@ -1,6 +1,6 @@
 use warnings;
 use strict;
-use Test::More;
+use Test::More tests => 6;
 use App::SpamcupNG::HTMLParse qw(find_next_id find_errors find_warnings);
 
 use lib './t';
@@ -42,4 +42,3 @@ is_deeply(
     'get the expected warnings'
 );
 
-done_testing;
