@@ -1,10 +1,8 @@
 use warnings;
 use strict;
 use Test::More;
-use App::SpamcupNG;
+use App::SpamcupNG::HTMLParse qw(find_spam_header);
 use File::Spec;
-use Log::Log4perl qw(:easy);
-Log::Log4perl->easy_init($WARN);
 
 my $raw = <<'DATA';
 
@@ -13,7 +11,7 @@ From: Alon Elkin &lt;alon.elkien@gmail.com&gt; (<strong>PHD. Hebrew to English a
 
 DATA
 
-my $parsed   = App::SpamcupNG::_spam_header($raw);
+my $parsed   = find_spam_header($raw);
 my $expected = [
     'From: Alon Elkin <alon.elkien@gmail.com> (',
     'PHD. Hebrew to English and German Translator',
@@ -22,7 +20,10 @@ my $expected = [
     'Content-Type: multipart/alternative;'
 ];
 
-is_deeply( $parsed, $expected, '_spam_header returns the expected structure' )
+is( ref($parsed), 'ARRAY',
+    'result from find_spam_header is an array reference' );
+
+is_deeply( $parsed, $expected, 'result has the expected structure' )
   or diag( explain($parsed) );
 
 done_testing;
