@@ -47,6 +47,8 @@ Returns the ID if found, otherwise C<undef>.
 # TODO: use XPath instead of regex
 sub find_next_id {
     my $content_ref = shift;
+    die "Must receive an scalar reference as parameter"
+        unless ( ref($content_ref) eq 'SCALAR' );
     my $next_id;
 
     if ( $$content_ref =~ $regexes{next_id} ) {
@@ -96,6 +98,8 @@ Returns an array reference with all errors found.
 
 sub find_errors {
     my $content_ref = shift;
+    die "Must receive an scalar reference as parameter"
+        unless ( ref($content_ref) eq 'SCALAR' );
     my $tree        = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($$content_ref);
     my @nodes = $tree->findnodes('//div[@id="content"]/div[@class="error"]');
@@ -123,6 +127,8 @@ Returns an array reference with all best contacts found.
 
 sub find_best_contacts {
     my $content_ref = shift;
+    die "Must receive an scalar reference as parameter"
+        unless ( ref($content_ref) eq 'SCALAR' );
     my $tree        = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($content_ref);
     my @nodes = $tree->findnodes('//div[@id="content"]');
@@ -195,6 +201,8 @@ Returns an array reference, where each item is a string.
 
 sub find_receivers {
     my $content_ref = shift;
+    die "Must receive an scalar reference as parameter"
+        unless ( ref($content_ref) eq 'SCALAR' );
     my $tree        = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($content_ref);
     my @nodes = $tree->findnodes('//*[@id="content"]');
