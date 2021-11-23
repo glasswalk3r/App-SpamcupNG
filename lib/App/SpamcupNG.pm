@@ -423,8 +423,16 @@ sub main_loop {
     }
 
     if ( my $warns_ref = find_warnings( \( $res->content ) ) ) {
-        foreach my $warning ( @{$warns_ref} ) {
-            $logger->warn($warning);
+
+        if ( @{$warns_ref} ) {
+
+            foreach my $warning ( @{$warns_ref} ) {
+                $logger->warn($warning);
+            }
+
+        }
+        else {
+            $logger->info('No warnings found in response');
         }
     }
 

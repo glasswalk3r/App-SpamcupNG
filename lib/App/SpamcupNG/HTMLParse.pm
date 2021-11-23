@@ -69,7 +69,9 @@ Returns an array reference with all warnings found.
 # TODO: create a single tree instance and check for everything at once
 sub find_warnings {
     my $content_ref = shift;
-    my $tree        = HTML::TreeBuilder::XPath->new;
+    die "Must receive an scalar reference as parameter"
+        unless ( ref($content_ref) eq 'SCALAR' );
+    my $tree = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($$content_ref);
     my @nodes
         = $tree->findnodes('//div[@id="content"]/div[@class="warning"]');
