@@ -695,7 +695,7 @@ sub main_loop {
     }
 
     # parse response
-    my $receivers_ref = find_receivers( $res->content );
+    my $receivers_ref = find_receivers( \( $res->content ) );
 
     if ( scalar( @{$receivers_ref} ) > 0 ) {
 

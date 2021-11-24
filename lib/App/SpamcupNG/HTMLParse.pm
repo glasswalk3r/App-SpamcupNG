@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use HTML::TreeBuilder::XPath 0.14;
 use Exporter 'import';
+use Carp 'croak';
 
 our @EXPORT_OK = (
     'find_next_id',       'find_errors',
@@ -47,7 +48,7 @@ Returns the ID if found, otherwise C<undef>.
 # TODO: use XPath instead of regex
 sub find_next_id {
     my $content_ref = shift;
-    die "Must receive an scalar reference as parameter"
+    croak "Must receive an scalar reference as parameter"
         unless ( ref($content_ref) eq 'SCALAR' );
     my $next_id;
 
@@ -71,7 +72,7 @@ Returns an array reference with all warnings found.
 # TODO: create a single tree instance and check for everything at once
 sub find_warnings {
     my $content_ref = shift;
-    die "Must receive an scalar reference as parameter"
+    croak "Must receive an scalar reference as parameter"
         unless ( ref($content_ref) eq 'SCALAR' );
     my $tree = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($$content_ref);
@@ -98,7 +99,7 @@ Returns an array reference with all errors found.
 
 sub find_errors {
     my $content_ref = shift;
-    die "Must receive an scalar reference as parameter"
+    croak "Must receive an scalar reference as parameter"
         unless ( ref($content_ref) eq 'SCALAR' );
     my $tree        = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($$content_ref);
@@ -127,7 +128,7 @@ Returns an array reference with all best contacts found.
 
 sub find_best_contacts {
     my $content_ref = shift;
-    die "Must receive an scalar reference as parameter"
+    croak "Must receive an scalar reference as parameter"
         unless ( ref($content_ref) eq 'SCALAR' );
     my $tree        = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($content_ref);
@@ -201,7 +202,7 @@ Returns an array reference, where each item is a string.
 
 sub find_receivers {
     my $content_ref = shift;
-    die "Must receive an scalar reference as parameter"
+    croak "Must receive an scalar reference as parameter"
         unless ( ref($content_ref) eq 'SCALAR' );
     my $tree        = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($content_ref);
