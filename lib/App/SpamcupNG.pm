@@ -536,10 +536,10 @@ sub main_loop {
                         or ( $type =~ /^mole/ and $send == 1 ) )
                     )
                 {
-                    $willsend .= "\t$master \t($info)\n";
+                    $willsend .= "$master ($info)\n";
                 }
                 else {
-                    $wontsend .= "\t$master \t($info)\n";
+                    $wontsend .= "$master ($info)\n";
                 }
             }
 
