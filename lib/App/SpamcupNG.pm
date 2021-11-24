@@ -479,9 +479,12 @@ sub main_loop {
     }
 
     if ( $logger->is_info ) {
-        my $best_ref     = find_best_contacts( \( $res->content ) );
-        my $best_as_text = join( ', ', @$best_ref );
-        $logger->info("Best contacts for SPAM reporting: $best_as_text");
+        my $best_ref = find_best_contacts( \( $res->content ) );
+
+        if ( @{$best_ref} ) {
+            my $best_as_text = join( ', ', @$best_ref );
+            $logger->info("Best contacts for SPAM reporting: $best_as_text");
+        }
     }
 
     my $form = _report_form( $res->content, $base_uri );
