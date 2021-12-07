@@ -1,6 +1,6 @@
 use warnings;
 use strict;
-use Test::More;
+use Test::More tests => 2;
 use App::SpamcupNG::HTMLParse qw(find_spam_header);
 use File::Spec;
 
@@ -26,4 +26,3 @@ is( ref($parsed), 'ARRAY',
 is_deeply( $parsed, $expected, 'result has the expected structure' )
     or diag( explain($parsed) );
 
-done_testing;
