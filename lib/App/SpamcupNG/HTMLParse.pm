@@ -101,13 +101,31 @@ sub find_errors {
     my $content_ref = shift;
     croak "Must receive an scalar reference as parameter"
         unless ( ref($content_ref) eq 'SCALAR' );
-    my $tree        = HTML::TreeBuilder::XPath->new;
+    my $tree = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($$content_ref);
     my @nodes = $tree->findnodes('//div[@id="content"]/div[@class="error"]');
     my @errors;
 
     foreach my $node (@nodes) {
         push( @errors, $node->as_trimmed_text );
+    }
+
+    # bounce errors are inside an form
+    my $base_xpath = '//form[@action="/mcgi"]';
+    @nodes = $tree->findnodes( $base_xpath . '//strong' );
+
+    if (@nodes) {
+        if ( $nodes[0]->as_trimmed_text() eq 'Bounce error' ) {
+            my @nodes = $tree->findnodes( $base_xpath );
+            $nodes[0]->parent(undef);
+
+            foreach my $node ($nodes[0]->content_list()) {
+                next unless (ref($node) eq '');
+                $node =~ s/^\s+//;
+                $node =~ s/\s+$//;
+                push( @errors, $node );
+            }
+        }
     }
 
     return \@errors;
@@ -130,7 +148,7 @@ sub find_best_contacts {
     my $content_ref = shift;
     croak "Must receive an scalar reference as parameter"
         unless ( ref($content_ref) eq 'SCALAR' );
-    my $tree        = HTML::TreeBuilder::XPath->new;
+    my $tree = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($content_ref);
     my @nodes = $tree->findnodes('//div[@id="content"]');
 
@@ -204,7 +222,7 @@ sub find_receivers {
     my $content_ref = shift;
     croak "Must receive an scalar reference as parameter"
         unless ( ref($content_ref) eq 'SCALAR' );
-    my $tree        = HTML::TreeBuilder::XPath->new;
+    my $tree = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($content_ref);
     my @nodes = $tree->findnodes('//*[@id="content"]');
     my @receivers;
