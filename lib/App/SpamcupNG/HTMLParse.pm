@@ -111,6 +111,24 @@ sub find_errors {
         push( @errors, $node->as_trimmed_text );
     }
 
+    # bounce errors are inside an form
+    my $base_xpath = '//form[@action="/mcgi"]';
+    @nodes = $tree->findnodes( $base_xpath . '//strong' );
+
+    if (@nodes) {
+        if ( $nodes[0]->as_trimmed_text() eq 'Bounce error' ) {
+            my @nodes = $tree->findnodes( $base_xpath );
+            $nodes[0]->parent(undef);
+
+            foreach my $node ($nodes[0]->content_list()) {
+                next unless (ref($node) eq '');
+                $node =~ s/^\s+//;
+                $node =~ s/\s+$//;
+                push( @errors, $node );
+            }
+        }
+    }
+
     return \@errors;
 }
 
