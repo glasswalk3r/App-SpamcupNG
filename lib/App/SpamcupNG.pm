@@ -31,11 +31,6 @@ our %OPTIONS_MAP = (
     'verbosity'  => 'V',
 );
 
-my %fatal_errors = (
-    mailhost_problem => qr/Mailhost\sconfiguration\sproblem/i,
-    too_old          => qr/^Sorry,\sthis\semail\sis\stoo\sold/
-);
-
 my %regexes = (
     no_user_id => qr/\>No userid found\</i,
     next_id    => qr/sc\?id\=(.*?)\"\>/i,
@@ -439,18 +434,7 @@ sub main_loop {
     if ( my $errors_ref = find_errors( \( $res->content ) ) ) {
 
         foreach my $error ( @{$errors_ref} ) {
-            my $is_fatal = 0;
-
-            foreach my $fatal_error ( keys(%fatal_errors) ) {
-
-                if ( $error =~ $fatal_errors{$fatal_error} ) {
-                    $is_fatal = 1;
-                    last;
-                }
-
-            }
-
-            if ($is_fatal) {
+            if ( $error->is_fatal() ) {
                 $logger->fatal($error);
 
               # must stop processing the HTML for this report and move to next
