@@ -7,6 +7,8 @@ use App::SpamcupNG::Error;
 use App::SpamcupNG::Error::Mailhost;
 use App::SpamcupNG::Error::Bounce;
 
+# VERSION
+
 our @EXPORT_OK = qw(create_error);
 
 my $mailhost_regex = qr/Mailhost\sconfiguration\sproblem/;

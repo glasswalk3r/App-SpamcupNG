@@ -2,6 +2,8 @@ package App::SpamcupNG::Error;
 use strict;
 use warnings;
 
+# VERSION
+
 sub new {
     my ( $class, $message_ref, $is_fatal ) = @_;
     $is_fatal //= 0;
@@ -18,7 +20,7 @@ sub new {
     my $self = {
         message  => $message_ref,
         is_fatal => $is_fatal
-    };
+        };
 
     bless( $self, $class );
     return $self;

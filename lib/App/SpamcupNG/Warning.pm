@@ -2,6 +2,8 @@ package App::SpamcupNG::Warning;
 use strict;
 use warnings;
 
+# VERSION
+
 sub new {
     my ( $class, $message_ref ) = @_;
 

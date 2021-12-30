@@ -3,6 +3,8 @@ use strict;
 use warnings;
 use parent 'App::SpamcupNG::Warning';
 
+# VERSION
+
 sub new {
     my ( $class, $messages_ref ) = @_;
     my $self = $class->SUPER::new( [ $messages_ref->[0] ] );

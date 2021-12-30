@@ -3,6 +3,8 @@ use strict;
 use warnings;
 use parent 'App::SpamcupNG::Error';
 
+# VERSION
+
 sub new {
     my ( $class, $message_ref ) = @_;
     die 'message must be an array reference with size = 3'

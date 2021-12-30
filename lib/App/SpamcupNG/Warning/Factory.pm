@@ -6,6 +6,8 @@ use Exporter 'import';
 use App::SpamcupNG::Warning;
 use App::SpamcupNG::Warning::Yum;
 
+# VERSION
+
 our @EXPORT_OK = qw(create_warning);
 
 my $yum_regex = qr/^Yum/;
