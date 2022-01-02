@@ -39,7 +39,7 @@ my %regexes = (
 
 lock_hash(%OPTIONS_MAP);
 
-# VERSION
+our $VERSION = '0.008'; # VERSION
 
 =head1 NAME
 
@@ -378,7 +378,7 @@ sub main_loop {
         $next_id = find_next_id( \$response );
 
         if ($logger->is_debug) {
-            $logger->debug("ID of next SPAM report found: $next_id");
+            $logger->debug("ID of next SPAM report found: $next_id") if ($next_id);
         }
 
         return -1 unless ( defined($next_id) );
@@ -482,71 +482,7 @@ sub main_loop {
         ) unless ($form);
 
     if ( $logger->is_info ) {
-        my $spam_header_ref = find_spam_header($1);
-
-        if ($spam_header_ref) {
-            my $as_string = join( "\n", @$spam_header_ref );
-            $logger->info("Head of the SPAM follows:\n$as_string");
-        }
-
-        if ( $logger->is_debug ) {
-            $logger->debug( 'Form data follows: ' . $form->dump );
-        }
-
-        # how many recipients for reports
-        my $max = $form->value("max");
-        my $willsend;
-        my $wontsend;
-
-        # iterate targets
-        for ( my $i = 1; $i <= $max; $i++ ) {
-            my $send   = $form->value("send$i");
-            my $type   = $form->value("type$i");
-            my $master = $form->value("master$i");
-            my $info   = $form->value("info$i");
-
-            # convert %2E -style stuff back to text, if any
-            if ( $info =~ /%([A-Fa-f\d]{2})/g ) {
-                $info =~ s/%([A-Fa-f\d]{2})/chr hex $1/eg;
-            }
-
-            if ($send
-                and (  ( $send eq 'on' )
-                    or ( $type =~ /^mole/ and $send == 1 ) )
-                )
-            {
-                $willsend .= "$master ($info)\n";
-            }
-            else {
-                $wontsend .= "$master ($info)\n";
-            }
-        }
-
-        my $message
-            = 'Would send the report to the following addresses (reason in parenthesis): ';
-
-        if ($willsend) {
-            $message .= $willsend;
-        }
-        else {
-            $message .= '--none--';
-        }
-
-        $logger->info($message);
-        $message = 'Following addresses would not be used: ';
-
-        if ($wontsend) {
-            $message .= $wontsend;
-        }
-        else {
-            $message .= '--none--';
-        }
-
-        $logger->info($message);
-    }
-
-    if ( $logger->is_info ) {
-        my $spam_header_ref = find_spam_header($1);
+        my $spam_header_ref = find_spam_header(\($res->content));
 
         if ($spam_header_ref) {
             my $as_string = join( "\n", @$spam_header_ref );
