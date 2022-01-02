@@ -15,7 +15,6 @@ our @EXPORT_OK = (
 );
 
 my %regexes = (
-    no_user_id => qr/\>No userid found\</i,
     next_id    => qr/sc\?id\=(.*?)\"\>/i
 );
 
