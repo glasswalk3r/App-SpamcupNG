@@ -9,7 +9,7 @@ use Getopt::Std;
 use YAML::XS 0.62 qw(LoadFile);
 use File::Spec;
 use App::SpamcupNG
-  qw(main_loop get_browser read_config %OPTIONS_MAP config_logger);
+  qw(main_loop read_config %OPTIONS_MAP config_logger);
 
 # VERSION
 # Delay between HTTP requests. Adjust this if Spamcop.net asks!
