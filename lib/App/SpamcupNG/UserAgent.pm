@@ -182,7 +182,6 @@ sub complete_report {
     return \($response->content);
 }
 
-
 =head1 AUTHOR
 
 Alceu Rodrigues de Freitas Junior, E<lt>arfreitas@cpan.orgE<gt>
