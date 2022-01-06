@@ -34,23 +34,37 @@ Returns a new instance.
 =cut
 
 sub new {
-    my ($class, $version) = @_;
+    my ( $class, $version ) = @_;
+    die 'The parameter version is required' unless ($version);
+
     my $self = {
-        name => 'spamcup user agent',
-        version => $version,
-        members_url => 'http://members.spamcop.net/',
-        code_login_url => 'http://www.spamcop.net/?code=',
-        report_url => 'http://www.spamcop.net/sc?id=',
+        name             => 'spamcup user agent',
+        version          => $version,
+        members_url      => 'http://members.spamcop.net/',
+        code_login_url   => 'http://www.spamcop.net/?code=',
+        report_url       => 'http://www.spamcop.net/sc?id=',
         current_base_url => undef
         };
 
     bless $self, $class;
 
     my $ua = LWP::UserAgent->new();
-    $ua->agent($self->{name} . '/' . $version);
+    $ua->agent( $self->{name} . '/' . $version );
     $ua->cookie_jar( HTTP::Cookies->new() );
     $self->{user_agent} = $ua;
     return $self;
+}
+
+=head2 user_agent
+
+Returns a string with the HTTP header user-agent that will be used by the inner
+HTTP user agent.
+
+=cut
+
+sub user_agent {
+    my $self = shift;
+    return $self->{user_agent}->agent;
 }
 
 =head2 login
@@ -67,13 +81,13 @@ Returns the HTML content as a scalar reference.
 =cut
 
 sub login {
-    my ($self, $id, $password) = @_;
+    my ( $self, $id, $password ) = @_;
     my $logger = get_logger('SpamcupNG');
     my $request;
 
     # TODO: check if the cookie is still valid before trying to login again
 
-    if ( $password ) {
+    if ($password) {
         $request = HTTP::Request->new( GET => 'http://members.spamcop.net/' );
         $request->authorization_basic( $id, $password );
     }
@@ -92,7 +106,7 @@ sub login {
         $logger->debug( "Got HTTP response:\n" . $response->as_string );
     }
 
-    return \($response->content) if ( $response->is_success );
+    return \( $response->content ) if ( $response->is_success );
 
     my $status = $response->status_line();
 
@@ -121,9 +135,10 @@ Returns the HTML content as a scalar reference.
 =cut
 
 sub spam_report {
-    my ($self, $report_id) = @_;
+    my ( $self, $report_id ) = @_;
     my $logger = get_logger('SpamcupNG');
-    my $request = HTTP::Request->new(GET => $self->{report_url} . $report_id );
+    my $request
+        = HTTP::Request->new( GET => $self->{report_url} . $report_id );
 
     if ( $logger->is_debug ) {
         $logger->debug( "Request to be sent:\n" . $request->as_string );
@@ -141,7 +156,7 @@ sub spam_report {
         return undef;
     }
 
-    return \($response->content);
+    return \( $response->content );
 }
 
 =head2 base
@@ -165,8 +180,8 @@ Returns the HTML content as a scalar reference.
 =cut
 
 sub complete_report {
-    my ($self, $http_request) = @_;
-    my $logger = get_logger('SpamcupNG');
+    my ( $self, $http_request ) = @_;
+    my $logger   = get_logger('SpamcupNG');
     my $response = $self->{user_agent}->request($http_request);
 
     if ( $logger->is_debug ) {
@@ -179,7 +194,7 @@ sub complete_report {
         return undef;
     }
 
-    return \($response->content);
+    return \( $response->content );
 }
 
 =head1 AUTHOR
