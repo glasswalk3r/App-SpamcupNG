@@ -1,6 +1,6 @@
 use warnings;
 use strict;
-use Test::More tests => 13;
+use Test::More tests => 15;
 use Test::Exception;
 
 use App::SpamcupNG::Error;
@@ -18,7 +18,11 @@ $instance = App::SpamcupNG::Error->new($error_ref, 1);
 is($instance->message, $error_ref->[0], 'error has the expected message');
 ok($instance->is_fatal, 'second error instance is fatal');
 throws_ok {App::SpamcupNG::Error->new} qr/non empty array reference/,
-    'new parameters validation works';
+    'new requires proper parameter';
+throws_ok {App::SpamcupNG::Error->new(1)} qr/non empty array reference/,
+    'new requires an array reference';
+throws_ok {App::SpamcupNG::Error->new([])} qr/non empty array reference/,
+    'new requires an array reference with length of at least 1';
 
 note('bounce tests');
 $instance = new_ok('App::SpamcupNG::Error::Bounce' => [[1]]);
