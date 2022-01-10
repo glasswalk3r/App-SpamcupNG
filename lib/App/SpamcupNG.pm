@@ -427,7 +427,7 @@ sub main_loop {
         if ( @{$warns_ref} ) {
 
             foreach my $warning ( @{$warns_ref} ) {
-                $logger->warn($warning);
+                $logger->warn($warning->message);
             }
 
         }
@@ -446,7 +446,7 @@ sub main_loop {
                 return 0;
             }
             else {
-                $logger->error($error);
+                $logger->error($error->message);
             }
 
         }
