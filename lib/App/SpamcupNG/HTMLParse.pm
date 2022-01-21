@@ -11,12 +11,14 @@ use App::SpamcupNG::Warning::Factory qw(create_warning);
 our @EXPORT_OK = (
     'find_next_id',       'find_errors',
     'find_warnings',      'find_spam_header',
-    'find_best_contacts', 'find_receivers'
-    );
+    'find_best_contacts', 'find_receivers',
+    'find_message_age'
+);
 
 my %regexes = (
-    next_id    => qr#^/sc\?id=(\w+)#
-    );
+    next_id     => qr#^/sc\?id=(\w+)#,
+    message_age => qr/^Message\sis\s(\d+)\s(\w+)\sold/
+);
 
 # VERSION
 
@@ -27,7 +29,7 @@ web pages
 
 =head1 SYNOPSIS
 
-    use App::SpamcupNG::HTMLParse qw(find_next_id find_errors find_warnings find_spam_header);
+    use App::SpamcupNG::HTMLParse qw(find_next_id find_errors find_warnings find_spam_header find_message_age);
 
 =head1 DESCRIPTION
 
@@ -35,6 +37,33 @@ This package export functions that uses XPath to extract specific information
 from the spamcop.net HTML pages.
 
 =head1 EXPORTS
+
+Following are all exported functions by this package.
+
+=head2 find_message_age
+
+=cut
+
+sub find_message_age {
+    my $content_ref = shift;
+    croak "Must receive an scalar reference as parameter"
+        unless ( ref($content_ref) eq 'SCALAR' );
+    my $tree = HTML::TreeBuilder::XPath->new;
+    $tree->parse_content($$content_ref);
+    my @nodes = $tree->findnodes('/html/body/child::div[@id="content"]');
+
+    foreach my $node (@nodes) {
+        foreach my $content ( $node->content_refs_list ) {
+            next unless ( ref($content) eq 'SCALAR' );
+            $$content =~ s/^\s+//;
+            $$content =~ s/\s+$//;
+            next if ( $$content eq '' );
+            return [ $1, $2 ] if ( $$content =~ $regexes{message_age} );
+        }
+    }
+
+    return undef;
+}
 
 =head2 find_next_id
 
@@ -52,18 +81,19 @@ sub find_next_id {
         unless ( ref($content_ref) eq 'SCALAR' );
     my $tree = HTML::TreeBuilder::XPath->new;
     $tree->parse_content($$content_ref);
-    my @nodes
-        = $tree->findnodes('//strong/a');
+    my @nodes = $tree->findnodes('//strong/a');
     my $next_id;
 
-    foreach my $element(@nodes) {
-        if ($element->as_trimmed_text eq 'Report Now') {
+    foreach my $element (@nodes) {
+        if ( $element->as_trimmed_text eq 'Report Now' ) {
 
             if ( $element->attr('href') =~ $regexes{next_id} ) {
                 $next_id = $1;
-                my $length = length($next_id);
+                my $length   = length($next_id);
                 my $expected = 45;
-                warn "Unexpected length for SPAM ID: got $length, expected $expected" unless ($length == $expected);
+                warn
+                    "Unexpected length for SPAM ID: got $length, expected $expected"
+                    unless ( $length == $expected );
                 last;
             }
         }
