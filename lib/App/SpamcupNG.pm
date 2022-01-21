@@ -16,8 +16,9 @@ use App::SpamcupNG::HTMLParse (
     'find_next_id',       'find_errors',
     'find_warnings',      'find_spam_header',
     'find_best_contacts', 'find_receivers',
-    'find_message_age', 'find_header_info'
+    'find_message_age',   'find_header_info'
 );
+use App::SpamcupNG::Summary;
 
 use constant TARGET_HTML_FORM => 'sendreport';
 
@@ -374,6 +375,7 @@ sub main_loop {
     sleep $opts_ref->{delay};
     my $response = _self_auth( $ua, $opts_ref );
     my $next_id;
+    my $summary = App::SpamcupNG::Summary->new;
 
     if ($response) {
         $next_id = find_next_id( \$response );
@@ -383,6 +385,7 @@ sub main_loop {
                 if ($next_id);
         }
 
+        $summary->set_id($next_id);
         return -1 unless ( defined($next_id) );
     }
     else {
@@ -431,6 +434,9 @@ sub main_loop {
                     . ', unit: '
                     . $age_info_ref->[1] );
         }
+
+        $summary->set_age( $age_info_ref->[0] );
+        $summary->set_age_unit( $age_info_ref->[1] );
     }
 
     if ( my $warns_ref = find_warnings( \( $res->content ) ) ) {
@@ -478,9 +484,9 @@ sub main_loop {
         $logger->debug("Base URI is $base_uri");
     }
 
+    my $best_ref = find_best_contacts( \( $res->content ) );
+    $summary->set_contacts($best_ref);
     if ( $logger->is_info ) {
-        my $best_ref = find_best_contacts( \( $res->content ) );
-
         if ( @{$best_ref} ) {
             my $best_as_text = join( ', ', @$best_ref );
             $logger->info("Best contacts for SPAM reporting: $best_as_text");
@@ -493,9 +499,9 @@ sub main_loop {
     ) unless ($form);
 
     if ( $logger->is_info ) {
-        my $spam_header_info = find_header_info(\($res->content));
-        $logger->info('X-Mailer: ' . $spam_header_info->{mailer});
-        $logger->info('Content-Type: ' . $spam_header_info->{content_type});
+        my $spam_header_info = find_header_info( \( $res->content ) );
+        $logger->info( 'X-Mailer: ' . $spam_header_info->{mailer} );
+        $logger->info( 'Content-Type: ' . $spam_header_info->{content_type} );
 
         my $spam_header_ref = find_spam_header( \( $res->content ) );
 
@@ -690,6 +696,7 @@ sub main_loop {
 
     # parse response
     my $receivers_ref = find_receivers( \( $res->content ) );
+    $summary->set_receivers($receivers_ref);
 
     if ( scalar( @{$receivers_ref} ) > 0 ) {
 
@@ -715,6 +722,8 @@ EOM
         $logger->warn($msg);
         $logger->warn( $res->content );
     }
+
+    $logger->debug($summary) if ($logger->is_debug);
 
     return 1;
 
