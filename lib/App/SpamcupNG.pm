@@ -16,7 +16,7 @@ use App::SpamcupNG::HTMLParse (
     'find_next_id',       'find_errors',
     'find_warnings',      'find_spam_header',
     'find_best_contacts', 'find_receivers',
-    'find_message_age'
+    'find_message_age', 'find_header_info'
 );
 
 use constant TARGET_HTML_FORM => 'sendreport';
@@ -493,6 +493,10 @@ sub main_loop {
     ) unless ($form);
 
     if ( $logger->is_info ) {
+        my $spam_header_info = find_header_info(\($res->content));
+        $logger->info('X-Mailer: ' . $spam_header_info->{mailer});
+        $logger->info('Content-Type: ' . $spam_header_info->{content_type});
+
         my $spam_header_ref = find_spam_header( \( $res->content ) );
 
         if ($spam_header_ref) {

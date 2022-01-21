@@ -12,7 +12,7 @@ our @EXPORT_OK = (
     'find_next_id',       'find_errors',
     'find_warnings',      'find_spam_header',
     'find_best_contacts', 'find_receivers',
-    'find_message_age'
+    'find_message_age',   'find_header_info'
 );
 
 my %regexes = (
@@ -29,7 +29,7 @@ web pages
 
 =head1 SYNOPSIS
 
-    use App::SpamcupNG::HTMLParse qw(find_next_id find_errors find_warnings find_spam_header find_message_age);
+    use App::SpamcupNG::HTMLParse qw(find_next_id find_errors find_warnings find_spam_header find_message_age find_header_info);
 
 =head1 DESCRIPTION
 
@@ -39,6 +39,65 @@ from the spamcop.net HTML pages.
 =head1 EXPORTS
 
 Following are all exported functions by this package.
+
+=head2 find_header_info
+
+=cut
+
+sub find_header_info {
+    my $content_ref = shift;
+    croak "Must receive an scalar reference as parameter"
+        unless ( ref($content_ref) eq 'SCALAR' );
+    my $tree = HTML::TreeBuilder::XPath->new;
+    $tree->parse_content($$content_ref);
+    my @nodes = $tree->findnodes('/html/body/div[@id="content"]/pre');
+    my %info  = (
+        mailer       => undef,
+        content_type => undef
+    );
+    my $mailer_regex       = qr/^X-Mailer:/;
+    my $content_type_regex = qr/^Content-Type:/;
+
+    foreach my $node (@nodes) {
+
+        foreach my $content ( split( "\n", $node->as_text() ) ) {
+            $content =~ s/^\s+//;
+            $content =~ s/\s+$//;
+            next if ( $content eq '' );
+
+            if ( $content =~ $mailer_regex ) {
+                my $wanted = ( split( ':', $content ) )[1];
+                $wanted =~ s/^\s+//;
+                $info{mailer} = $wanted;
+                next;
+            }
+
+            if ( $content =~ $content_type_regex ) {
+                my $wanted = ( split( ':', $content ) )[1];
+                $wanted =~ s/^\s+//;
+                my @wanted = split( ';', $wanted );
+
+                if ( scalar(@wanted) > 1 ) {
+                    my $encoding = $wanted[0];
+                    my $charset  = lc( $wanted[1] );
+                    $charset =~ s/^\s+//;
+                    $info{content_type} = join( ';', $encoding, $charset );
+                }
+                else {
+                    chop $wanted if ( substr( $wanted, -1 ) eq ';' );
+                    $info{content_type} = $wanted;
+                }
+
+                next;
+            }
+
+            last if ( $info{mailer} and $info{content_type} );
+        }
+    }
+
+    return \%info;
+
+}
 
 =head2 find_message_age
 
