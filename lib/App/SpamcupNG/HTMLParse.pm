@@ -42,6 +42,13 @@ Following are all exported functions by this package.
 
 =head2 find_message_age
 
+Find and return the SPAM message age information.
+
+Returns an array reference, with the zero index as an integer with the age, and
+the index 1 as the age unit (possibly "hour");
+
+If nothing is found, returns C<undef>;
+
 =cut
 
 sub find_message_age {
@@ -58,7 +65,12 @@ sub find_message_age {
             $$content =~ s/^\s+//;
             $$content =~ s/\s+$//;
             next if ( $$content eq '' );
-            return [ $1, $2 ] if ( $$content =~ $regexes{message_age} );
+
+            if ( $$content =~ $regexes{message_age} ) {
+                my ( $age, $unit ) = ( $1, $2 );
+                chop $unit if ( substr( $unit, -1 ) eq 's' );
+                return [ $age, $unit ];
+            }
         }
     }
 
