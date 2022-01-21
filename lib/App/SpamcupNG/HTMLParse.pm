@@ -24,7 +24,7 @@ my %regexes = (
 
 =head1 NAME
 
-App::SpamcupNG::HTMLParse - function to extract information from Spamcop.net
+App::SpamcupNG::HTMLParse - functions to extract information from Spamcop.net
 web pages
 
 =head1 SYNOPSIS
@@ -41,6 +41,22 @@ from the spamcop.net HTML pages.
 Following are all exported functions by this package.
 
 =head2 find_header_info
+
+Finds information from the e-mail header of the received SPAM and returns it.
+
+Returns a hash reference with the following keys:
+
+=over
+
+=item mailer: the X-Mailer header, if available
+
+=item content_type: the Content-Type, if available
+
+=back
+
+There is an attempt to normalize the C<Content-Type> header, by removing extra
+spaces and using just the first two entries, also making everything as lower
+case.
 
 =cut
 
@@ -78,7 +94,7 @@ sub find_header_info {
                 my @wanted = split( ';', $wanted );
 
                 if ( scalar(@wanted) > 1 ) {
-                    my $encoding = $wanted[0];
+                    my $encoding = lc( $wanted[0] );
                     my $charset  = lc( $wanted[1] );
                     $charset =~ s/^\s+//;
                     $info{content_type} = join( ';', $encoding, $charset );
