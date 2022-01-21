@@ -15,8 +15,9 @@ use Carp;
 use App::SpamcupNG::HTMLParse (
     'find_next_id',       'find_errors',
     'find_warnings',      'find_spam_header',
-    'find_best_contacts', 'find_receivers'
-    );
+    'find_best_contacts', 'find_receivers',
+    'find_message_age'
+);
 
 use constant TARGET_HTML_FORM => 'sendreport';
 
@@ -29,13 +30,13 @@ our %OPTIONS_MAP = (
     'alt_code'   => 'c',
     'alt_user'   => 'l',
     'verbosity'  => 'V',
-    );
+);
 
 my %regexes = (
     no_user_id => qr/\>No userid found\</i,
     next_id    => qr/sc\?id\=(.*?)\"\>/i,
     http_500   => qr/500/,
-    );
+);
 
 lock_hash(%OPTIONS_MAP);
 
@@ -215,7 +216,7 @@ sub config_logger {
         WARN  => $WARN,
         ERROR => $ERROR,
         FATAL => $FATAL
-        );
+    );
     croak "The value '$level' is not a valid value for level"
         unless ( exists( $levels{$level} ) );
 
@@ -334,7 +335,7 @@ sub _self_auth {
             $logger->warn($res_status);
             $logger->fatal(
                 'Cannot connect to server or invalid credentials. Please verify your username and password and try again.'
-                );
+            );
         }
     }
 
@@ -344,7 +345,7 @@ sub _self_auth {
     if ( $content =~ $regexes{no_user_id} ) {
         $logger->logdie(
             'No userid found. Please check that you have entered correct code. Also consider obtaining a password to Spamcop.net instead of using the old-style authorization token.'
-            );
+        );
     }
 
     if ($auth_is_ok) {
@@ -377,8 +378,9 @@ sub main_loop {
     if ($response) {
         $next_id = find_next_id( \$response );
 
-        if ($logger->is_debug) {
-            $logger->debug("ID of next SPAM report found: $next_id") if ($next_id);
+        if ( $logger->is_debug ) {
+            $logger->debug("ID of next SPAM report found: $next_id")
+                if ($next_id);
         }
 
         return -1 unless ( defined($next_id) );
@@ -391,7 +393,7 @@ sub main_loop {
     if ( ($last_seen) and ( $next_id eq $last_seen ) ) {
         $logger->fatal(
             "I have seen this ID earlier, we do not want to report it again. This usually happens because of a bug in Spamcup. Make sure you use latest version! You may also want to go check from Spamcop what is happening: http://www.spamcop.net/sc?id=$next_id"
-            );
+        );
     }
 
     $last_seen = $next_id;    # store for comparison
@@ -422,12 +424,21 @@ sub main_loop {
         return 0;
     }
 
+    if ( my $age_info_ref = find_message_age( \( $res->content ) ) ) {
+        if ($age_info_ref) {
+            $logger->info( 'Message age: '
+                    . $age_info_ref->[0]
+                    . ', unit: '
+                    . $age_info_ref->[1] );
+        }
+    }
+
     if ( my $warns_ref = find_warnings( \( $res->content ) ) ) {
 
         if ( @{$warns_ref} ) {
 
             foreach my $warning ( @{$warns_ref} ) {
-                $logger->warn($warning->message);
+                $logger->warn( $warning->message );
             }
 
         }
@@ -446,7 +457,7 @@ sub main_loop {
                 return 0;
             }
             else {
-                $logger->error($error->message);
+                $logger->error( $error->message );
             }
 
         }
@@ -460,7 +471,7 @@ sub main_loop {
     unless ($base_uri) {
         $logger->fatal(
             'No base URI found. Internal error? Please report this error by registering an issue on Github'
-            );
+        );
     }
 
     if ( $logger->is_debug ) {
@@ -479,10 +490,10 @@ sub main_loop {
     my $form = _report_form( $res->content, $base_uri );
     $logger->fatal(
         'Could not find the HTML form to report the SPAM! May be a temporary Spamcop.net error, try again later! Quitting...'
-        ) unless ($form);
+    ) unless ($form);
 
     if ( $logger->is_info ) {
-        my $spam_header_ref = find_spam_header(\($res->content));
+        my $spam_header_ref = find_spam_header( \( $res->content ) );
 
         if ($spam_header_ref) {
             my $as_string = join( "\n", @$spam_header_ref );
@@ -547,7 +558,7 @@ sub main_loop {
 
     $logger->fatal(
         'Could not find the HTML form to report the SPAM! May be a temporary Spamcop website error, try again later! Quitting...'
-        ) unless ($form);
+    ) unless ($form);
 
     # Run without confirming each spam? Stupid. :)
     unless ( $opts_ref->{stupid} ) {
@@ -603,7 +614,7 @@ sub main_loop {
         my $delay = $1;
         $logger->warn(
             "Spamcop seems to be currently overloaded. Trying again in $delay seconds. Wait..."
-            );
+        );
         sleep $opts_ref->{delay};
 
         # fool it to avoid duplicate detector
@@ -617,7 +628,7 @@ sub main_loop {
     {
         $logger->warn(
             'No source IP address found. Your report might be missing headers. Skipping.'
-            );
+        );
         return 0;
     }
     else {
@@ -625,14 +636,14 @@ sub main_loop {
       # Shit happens. If you know it should be parseable, please report a bug!
         $logger->warn(
             "Can't parse Spamcop.net's HTML. If this does not happen very often you can ignore this warning. Otherwise check if there's new version available. Skipping."
-            );
+        );
         return 0;
     }
 
     if ( $opts_ref->{check_only} ) {
         $logger->info(
             'You gave option -n, so we\'ll stop here. The SPAM was NOT reported.'
-            );
+        );
         exit;
     }
 
