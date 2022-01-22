@@ -31,9 +31,22 @@ C<follow_best_practice>.
 
 =item id: the SPAM report unique ID.
 
-=item mailer: the e-mail header X-Mailer, if available.
+=item mailer: the e-mail header C<X-Mailer>, if available. Might be C<undef>.
+
+=item content_type: the e-mail header C<Content-Type>, if available. Might be C<undef>.
+
+=item age: the time elapsed since the SPAM e-mail was received.
+
+=item age_unit: the time elapsed unit since the SPAM e-mail was received.
+
+=item contacts: an array reference with the "best contacts" found in the report.
+
+=item receivers: an array reference with the e-mail addresses.
 
 =back
+
+Sometimes the C<receivers> addresses will not real ones, but "counters" that
+will not be used for the report, but only for Spamcop statistics.
 
 =cut
 
@@ -57,6 +70,33 @@ sub new {
     my $self = {};
     bless $self, $class;
     return $self;
+}
+
+=head2 as_text
+
+Returns the summary attributes as strings, separated by commas.
+
+If some of attributes are C<undef>, the string C<not avaialable> will be used
+instead.
+
+=cut
+
+sub as_text {
+    my $self    = shift;
+    my @scalars = qw(id mailer content_type age age_unit);
+    my @dump = map { $_ . '=' . ( $self->{$_} || 'not available' ) } @scalars;
+
+    foreach my $key (qw(receivers contacts)) {
+        if ( $self->{$key} ) {
+            push( @dump,
+                ( "$key=(" . join( ';', @{ $self->{$key} } ) . ')' ) );
+        }
+        else {
+            push( @dump, "$key=()" );
+        }
+    }
+
+    return join( ',', @dump );
 }
 
 =head1 SEE ALSO
