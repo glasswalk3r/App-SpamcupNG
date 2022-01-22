@@ -429,14 +429,20 @@ sub main_loop {
 
     if ( my $age_info_ref = find_message_age( \( $res->content ) ) ) {
         if ($age_info_ref) {
-            $logger->info( 'Message age: '
-                    . $age_info_ref->[0]
-                    . ', unit: '
-                    . $age_info_ref->[1] );
-        }
 
-        $summary->set_age( $age_info_ref->[0] );
-        $summary->set_age_unit( $age_info_ref->[1] );
+            if ( $logger->is_info ) {
+                $logger->info( 'Message age: '
+                        . $age_info_ref->[0]
+                        . ', unit: '
+                        . $age_info_ref->[1] );
+            }
+
+            $summary->set_age( $age_info_ref->[0] );
+            $summary->set_age_unit( $age_info_ref->[1] );
+        }
+        else {
+            $logger->warn('Failed to parse SPAM age information');
+        }
     }
 
     if ( my $warns_ref = find_warnings( \( $res->content ) ) ) {
@@ -500,8 +506,11 @@ sub main_loop {
 
     if ( $logger->is_info ) {
         my $spam_header_info = find_header_info( \( $res->content ) );
-        $logger->info( 'X-Mailer: ' . $spam_header_info->{mailer} );
-        $logger->info( 'Content-Type: ' . $spam_header_info->{content_type} );
+        my $na               = 'not available';
+        $logger->info(
+            'X-Mailer: ' . ( $spam_header_info->{mailer} || $na ) );
+        $logger->info(
+            'Content-Type: ' . ( $spam_header_info->{content_type} || $na ) );
 
         my $spam_header_ref = find_spam_header( \( $res->content ) );
 
@@ -723,7 +732,8 @@ EOM
         $logger->warn( $res->content );
     }
 
-    $logger->debug($summary) if ($logger->is_debug);
+    $logger->debug( 'SPAM report summary: ' . $summary->as_text )
+        if ( $logger->is_debug );
 
     return 1;
 
