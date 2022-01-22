@@ -297,6 +297,15 @@ Returns true if everything went right, or C<die> if a fatal error happened.
 
 =cut
 
+sub _redact_auth_req {
+    my $request = shift;
+    my @lines   = split( "\n", $request->as_string );
+    my $secret   = ( split( /\s/, $lines[1] ) )[2];
+    my $redacted = '*' x length($secret);
+    $lines[1] =~ s/$secret/$redacted/;
+    return join( "\n", @lines );
+}
+
 sub _self_auth {
     my ( $ua, $opts_ref ) = @_;
     my $logger = get_logger('SpamcupNG');
@@ -312,9 +321,8 @@ sub _self_auth {
             GET => 'http://www.spamcop.net/?code=' . $opts_ref->{ident} );
     }
 
-    if ( $logger->is_debug() ) {
-        $logger->debug( "Request details:\n" . $req->as_string );
-    }
+    $logger->debug( "Request details:\n" . _redact_auth_req($req) )
+        if ( $logger->is_debug() );
 
     my $res = $ua->request($req);
 
