@@ -99,6 +99,17 @@ sub as_text {
     return join( ',', @dump );
 }
 
+=head2 tracking_url
+
+Returns the tracking URL of the SPAM report as a string.
+
+=cut
+
+sub tracking_url {
+    my $self = shift;
+    return 'https://www.spamcop.net/sc?id=' . $self->{id};
+}
+
 =head1 SEE ALSO
 
 =over

@@ -4,7 +4,7 @@ use Test::More;
 
 use App::SpamcupNG::Summary;
 my $instance = new_ok('App::SpamcupNG::Summary');
-can_ok( $instance, qw(new as_text) );
+can_ok( $instance, qw(new as_text tracking_url) );
 is( $instance->as_text,
     'id=not available,mailer=not available,content_type=not available,age=not available,age_unit=not available,receivers=(),contacts=()',
     'as_text returns the expected empty instance'
