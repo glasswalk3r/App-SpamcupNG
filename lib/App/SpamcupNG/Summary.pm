@@ -2,6 +2,7 @@ package App::SpamcupNG::Summary;
 use warnings;
 use strict;
 use parent qw(Class::Accessor);
+use Hash::Util 'lock_keys';
 
 # VERSION
 
@@ -29,7 +30,7 @@ C<follow_best_practice>.
 
 =over
 
-=item id: the SPAM report unique ID.
+=item tracking_id: the SPAM report unique tracking ID.
 
 =item mailer: the e-mail header C<X-Mailer>, if available. Might be C<undef>.
 
@@ -52,9 +53,9 @@ will not be used for the report, but only for Spamcop statistics.
 
 __PACKAGE__->follow_best_practice;
 my @fields = (
-    'id',       'mailer',   'content_type', 'age',
-    'age_unit', 'contacts', 'receivers'
-    );
+    'tracking_id', 'mailer',   'content_type', 'age',
+    'age_unit',    'contacts', 'receivers'
+);
 __PACKAGE__->mk_accessors(@fields);
 
 =head1 METHODS
@@ -67,8 +68,17 @@ Creates a new instance. No parameter is required or expected.
 
 sub new {
     my ( $class, $attribs_ref ) = @_;
-    my $self = {};
+    my $self = {
+        tracking_id  => undef,
+        mailer       => undef,
+        content_type => undef,
+        age          => undef,
+        age_unit     => undef,
+        contacts     => undef,
+        receivers    => undef
+    };
     bless $self, $class;
+    lock_keys( %{$self} );
     return $self;
 }
 
@@ -82,14 +92,34 @@ instead.
 =cut
 
 sub as_text {
-    my $self    = shift;
-    my @scalars = qw(id mailer content_type age age_unit);
+    my $self = shift;
+    my @scalars;
+
+    foreach my $field (@fields) {
+        next if ( $field eq 'contacts' );
+        next if ( $field eq 'receivers' );
+        push( @scalars, $field );
+    }
+
     my @dump = map { $_ . '=' . ( $self->{$_} || 'not available' ) } @scalars;
 
     foreach my $key (qw(receivers contacts)) {
         if ( $self->{$key} ) {
-            push( @dump,
-                ( "$key=(" . join( ';', @{ $self->{$key} } ) . ')' ) );
+
+            if ( $key eq 'contacts' ) {
+                push( @dump,
+                    ( "$key=(" . join( ';', @{ $self->{$key} } ) . ')' ) );
+                next;
+            }
+
+            my @receivers;
+
+            foreach my $entry_ref ( @{ $self->{$key} } ) {
+                push( @receivers,
+                    '(' . $entry_ref->[0] . ',' . $entry_ref->[1] . ')' );
+            }
+            push( @dump, ( "$key=(" . join( ';', @receivers ) . ')' ) );
+
         }
         else {
             push( @dump, "$key=()" );
@@ -107,7 +137,7 @@ Returns the tracking URL of the SPAM report as a string.
 
 sub tracking_url {
     my $self = shift;
-    return 'https://www.spamcop.net/sc?id=' . $self->{id};
+    return 'https://www.spamcop.net/sc?id=' . $self->{tracking_id};
 }
 
 =head1 SEE ALSO
