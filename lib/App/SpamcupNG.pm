@@ -393,7 +393,7 @@ sub main_loop {
                 if ($next_id);
         }
 
-        $summary->set_id($next_id);
+        $summary->set_tracking_id($next_id);
         return -1 unless ( defined($next_id) );
     }
     else {

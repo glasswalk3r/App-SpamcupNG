@@ -55,7 +55,7 @@ __PACKAGE__->follow_best_practice;
 my @fields = (
     'tracking_id', 'mailer',   'content_type', 'age',
     'age_unit',    'contacts', 'receivers'
-);
+    );
 __PACKAGE__->mk_accessors(@fields);
 
 =head1 METHODS
@@ -76,7 +76,7 @@ sub new {
         age_unit     => undef,
         contacts     => undef,
         receivers    => undef
-    };
+        };
     bless $self, $class;
     lock_keys( %{$self} );
     return $self;
@@ -117,7 +117,7 @@ sub as_text {
 
             foreach my $entry_ref ( @{ $self->{$key} } ) {
                 push( @receivers,
-                          '('
+                    '('
                         . $entry_ref->[0] . ','
                         . ( $entry_ref->[1] || $na )
                         . ')' );

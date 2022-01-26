@@ -18,7 +18,7 @@ is_deeply(
         [ 'deliverabilityteam#epsilon.com',  undef ]
     ],
     'It has the expected receivers'
-);
+    );
 
 # vim: filetype=perl
 
