@@ -298,8 +298,8 @@ Returns true if everything went right, or C<die> if a fatal error happened.
 =cut
 
 sub _redact_auth_req {
-    my $request = shift;
-    my @lines   = split( "\n", $request->as_string );
+    my $request  = shift;
+    my @lines    = split( "\n", $request->as_string );
     my $secret   = ( split( /\s/, $lines[1] ) )[2];
     my $redacted = '*' x length($secret);
     $lines[1] =~ s/$secret/$redacted/;
@@ -512,9 +512,12 @@ sub main_loop {
         'Could not find the HTML form to report the SPAM! May be a temporary Spamcop.net error, try again later! Quitting...'
     ) unless ($form);
 
+    my $spam_header_info = find_header_info( \( $res->content ) );
+    $summary->set_mailer( $spam_header_info->{mailer} );
+    $summary->set_content_type( $spam_header_info->{content_type} );
+
     if ( $logger->is_info ) {
-        my $spam_header_info = find_header_info( \( $res->content ) );
-        my $na               = 'not available';
+        my $na = 'not available';
         $logger->info(
             'X-Mailer: ' . ( $spam_header_info->{mailer} || $na ) );
         $logger->info(
