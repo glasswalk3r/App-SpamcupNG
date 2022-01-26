@@ -423,6 +423,8 @@ sub find_receivers {
     $tree->parse_content($content_ref);
     my @nodes = $tree->findnodes('//*[@id="content"]');
     my @receivers;
+    my $devnull     = q{/dev/null'ing};
+    my $report_sent = 'Spam report id';
 
     foreach my $node (@nodes) {
         foreach my $inner ( $node->content_list() ) {
@@ -431,7 +433,26 @@ sub find_receivers {
             next if ( ref($inner) );
             $inner =~ s/^\s+//;
             $inner =~ s/\s+$//;
-            push( @receivers, $inner );
+
+            my $result_ref;
+            my @parts = split( /\s/, $inner );
+
+  # /dev/null\'ing report for google-abuse-bounces-reports@devnull.spamcop.net
+            if ( substr( $inner, 0, length($devnull) ) eq $devnull ) {
+                $result_ref = [ ( split( '@', $parts[-1] ) )[0], undef ];
+            }
+
+          # Spam report id 7151980235 sent to: dl_security_whois@navercorp.com
+            elsif (
+                substr( $inner, 0, length($report_sent) ) eq $report_sent )
+            {
+                $result_ref = [$parts[6], $parts[3]];
+            }
+            else {
+                warn "Unexpected receiver format: $inner";
+            }
+
+            push( @receivers, $result_ref );
         }
     }
 

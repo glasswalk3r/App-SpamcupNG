@@ -94,6 +94,7 @@ instead.
 sub as_text {
     my $self = shift;
     my @scalars;
+    my $na = 'not available';
 
     foreach my $field (@fields) {
         next if ( $field eq 'contacts' );
@@ -101,7 +102,7 @@ sub as_text {
         push( @scalars, $field );
     }
 
-    my @dump = map { $_ . '=' . ( $self->{$_} || 'not available' ) } @scalars;
+    my @dump = map { $_ . '=' . ( $self->{$_} || $na ) } @scalars;
 
     foreach my $key (qw(receivers contacts)) {
         if ( $self->{$key} ) {
@@ -116,7 +117,10 @@ sub as_text {
 
             foreach my $entry_ref ( @{ $self->{$key} } ) {
                 push( @receivers,
-                    '(' . $entry_ref->[0] . ',' . $entry_ref->[1] . ')' );
+                          '('
+                        . $entry_ref->[0] . ','
+                        . ( $entry_ref->[1] || $na )
+                        . ')' );
             }
             push( @dump, ( "$key=(" . join( ';', @receivers ) . ')' ) );
 
