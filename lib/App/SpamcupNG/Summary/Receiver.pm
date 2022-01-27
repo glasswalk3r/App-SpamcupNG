@@ -17,9 +17,9 @@ App::SpamcupNG::Summary::Receiver - representation of a SPAM report receiver
 
 =head1 DESCRIPTION
 
-This class was created to facilitate the handling of submitted SPAM reports
-for the interested parties. Sometimes a party doesn't actually receive a
-report and that is expected by design.
+This class was created to facilitate the handling of submitted SPAM reports for
+the interested parties. Sometimes a party doesn't actually receive a report and
+that is expected by design.
 
 =head1 ATTRIBUTES
 
@@ -35,9 +35,9 @@ Sometimes a SPAM report is not sent to an e-mail address, Spamcop calls that
 "devnull'ing": the report is just stored for statistical reasons, no real
 e-mail address receive the report.
 
-In those cases, only the indication of the domain that would receive the
-SPAM report is stored, without a report sent ID (actually this ID exists,
-but the web interface does not exports that info).
+In those cases, only the indication of the domain that would receive the SPAM
+report is stored, without a report sent ID (actually this ID exists, but the
+web interface does not exports that info).
 
 =cut
 
@@ -66,7 +66,7 @@ sub new {
     my $self = {
         report_id => $attribs_ref->[1],
         email     => $attribs_ref->[0],
-    };
+        };
 
     bless $self, $class;
     lock_hash( %{$self} );

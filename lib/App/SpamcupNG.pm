@@ -517,11 +517,8 @@ sub main_loop {
     $summary->set_content_type( $spam_header_info->{content_type} );
 
     if ( $logger->is_info ) {
-        my $na = 'not available';
-        $logger->info(
-            'X-Mailer: ' . ( $spam_header_info->{mailer} || $na ) );
-        $logger->info(
-            'Content-Type: ' . ( $spam_header_info->{content_type} || $na ) );
+        $logger->info( 'X-Mailer: ' . $summary->to_text('mailer') );
+        $logger->info( 'Content-Type: ' . $summary->to_text('content_type') );
 
         my $spam_header_ref = find_spam_header( \( $res->content ) );
 
@@ -720,13 +717,9 @@ sub main_loop {
 
     if ( scalar( @{$receivers_ref} ) > 0 ) {
 
-        # print the report
         if ( $logger->is_info ) {
-
-            my $report = join( "\n", @{$receivers_ref} );
-            $logger->info(
-                "Spamcop.net sent following SPAM reports:\n$report");
-
+            $logger->info( 'Spamcop.net sent following SPAM reports: '
+                    . $summary->to_text('receivers') );
             $logger->info('Finished processing.');
         }
 

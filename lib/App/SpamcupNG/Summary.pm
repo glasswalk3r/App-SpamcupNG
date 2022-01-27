@@ -58,7 +58,7 @@ __PACKAGE__->follow_best_practice;
 my @fields = (
     'tracking_id', 'mailer', 'content_type', 'age',
     'age_unit',    'contacts'
-);
+    );
 __PACKAGE__->mk_accessors(@fields);
 __PACKAGE__->mk_ro_accessors(qw(receivers));
 
@@ -80,7 +80,7 @@ sub new {
         age_unit     => undef,
         contacts     => undef,
         receivers    => undef
-    };
+        };
     bless $self, $class;
     lock_keys( %{$self} );
     return $self;
