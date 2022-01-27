@@ -3,6 +3,9 @@ use warnings;
 use strict;
 use parent qw(Class::Accessor);
 use Hash::Util 'lock_keys';
+use Carp 'confess';
+
+use App::SpamcupNG::Summary::Receiver;
 
 # VERSION
 
@@ -42,7 +45,7 @@ C<follow_best_practice>.
 
 =item contacts: an array reference with the "best contacts" found in the report.
 
-=item receivers: an array reference with the e-mail addresses.
+=item receivers: an array reference with L<App::SpamcupNG::Summary::Receiver> instances.
 
 =back
 
@@ -53,10 +56,11 @@ will not be used for the report, but only for Spamcop statistics.
 
 __PACKAGE__->follow_best_practice;
 my @fields = (
-    'tracking_id', 'mailer',   'content_type', 'age',
-    'age_unit',    'contacts', 'receivers'
-    );
+    'tracking_id', 'mailer', 'content_type', 'age',
+    'age_unit',    'contacts'
+);
 __PACKAGE__->mk_accessors(@fields);
+__PACKAGE__->mk_ro_accessors(qw(receivers));
 
 =head1 METHODS
 
@@ -76,7 +80,7 @@ sub new {
         age_unit     => undef,
         contacts     => undef,
         receivers    => undef
-        };
+    };
     bless $self, $class;
     lock_keys( %{$self} );
     return $self;
@@ -94,7 +98,6 @@ instead.
 sub as_text {
     my $self = shift;
     my @scalars;
-    my $na = 'not available';
 
     foreach my $field (@fields) {
         next if ( $field eq 'contacts' );
@@ -102,7 +105,7 @@ sub as_text {
         push( @scalars, $field );
     }
 
-    my @dump = map { $_ . '=' . ( $self->{$_} || $na ) } @scalars;
+    my @dump = map { $_ . '=' . ( $self->{$_} || $self->na ) } @scalars;
 
     foreach my $key (qw(receivers contacts)) {
         if ( $self->{$key} ) {
@@ -113,16 +116,7 @@ sub as_text {
                 next;
             }
 
-            my @receivers;
-
-            foreach my $entry_ref ( @{ $self->{$key} } ) {
-                push( @receivers,
-                    '('
-                        . $entry_ref->[0] . ','
-                        . ( $entry_ref->[1] || $na )
-                        . ')' );
-            }
-            push( @dump, ( "$key=(" . join( ';', @receivers ) . ')' ) );
+            push( @dump, $self->_receivers_as_text );
 
         }
         else {
@@ -142,6 +136,76 @@ Returns the tracking URL of the SPAM report as a string.
 sub tracking_url {
     my $self = shift;
     return 'https://www.spamcop.net/sc?id=' . $self->{tracking_id};
+}
+
+=head2 to_text
+
+Getter for attributes that returns the value as a string.
+
+If the attribute value is C<undef>, the string return by C<na()> will be used
+instead.
+
+Expects as parameter the name of the parameter, returns a string.
+
+=cut
+
+sub _receivers_as_text {
+    my $self = shift;
+    my @receivers;
+
+    foreach my $receiver ( @{ $self->{receivers} } ) {
+        push( @receivers, '(' . $receiver->as_text . ')' );
+    }
+
+    return "receivers=(" . join( ';', @receivers ) . ')';
+}
+
+sub _contacts_as_text {
+    my $self = shift;
+    return '(' . join( ';', @{ $self->{contacts} } ) . ')'
+        if ( $self->{contacts} );
+    return '()';
+}
+
+sub to_text {
+    my ( $self, $attrib ) = @_;
+    return $self->_receivers_as_text if ( $attrib eq 'receivers' );
+    return $self->_contacts_as_text  if ( $attrib eq 'contacts' );
+    return $self->{$attrib} || $self->na;
+}
+
+=head2 na
+
+Returns the "not available" string. Can be used as class method.
+
+=cut
+
+sub na {
+    return 'not available';
+}
+
+=head2 set_receivers
+
+Setter for the C<receivers> attribute.
+
+Expects as parameter an array reference, with inner array references inside.
+
+Returns "true" (1) if everything goes fine.
+
+=cut
+
+sub set_receivers {
+    my ( $self, $receivers_ref ) = @_;
+    confess 'An array reference is expected as parameter'
+        unless ( ref($receivers_ref) eq 'ARRAY' );
+    my @items;
+
+    foreach my $receiver_ref ( @{$receivers_ref} ) {
+        push( @items, App::SpamcupNG::Summary::Receiver->new($receiver_ref) );
+    }
+
+    $self->{receivers} = \@items;
+    return 1;
 }
 
 =head1 SEE ALSO
