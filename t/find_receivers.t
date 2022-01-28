@@ -10,12 +10,15 @@ my $receivers_ref = find_receivers( read_html('post_reporting.html') );
 is( ref($receivers_ref), 'ARRAY', 'the returned value is a array reference' );
 is( scalar( @{$receivers_ref} ),
     3, 'It has the expected number of receivers' );
+
 is_deeply(
     $receivers_ref,
-    [   q{/dev/null'ing report for google-abuse-bounces-reports@devnull.spamcop.net},
-        'Spam report id 7151980235 sent to: dl_security_whois@navercorp.com',
-        q{/dev/null'ing report for deliverabilityteam#epsilon.com@devnull.spamcop.net}
+    [   [ 'google-abuse-bounces-reports',    undef ],
+        [ 'dl_security_whois@navercorp.com', '7151980235' ],
+        [ 'deliverabilityteam#epsilon.com',  undef ]
     ],
     'It has the expected receivers'
     );
+
+# vim: filetype=perl
 
