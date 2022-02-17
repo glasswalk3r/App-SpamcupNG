@@ -22,7 +22,7 @@ is( $result->{mailer}, undef,  'mailer has the expected value' );
 is( $result->{content_type},
     'multipart/alternative;charset="utf-8"',
     'content_type has the expected value'
-);
+    );
 
 $source = 'boundary.html';
 note($source);
@@ -32,7 +32,7 @@ is( $result->{mailer}, undef,  'mailer has the expected value' );
 is( $result->{content_type},
     'multipart/alternative',
     'content_type has the expected value'
-);
+    );
 
 # vim: filetype=perl
 
