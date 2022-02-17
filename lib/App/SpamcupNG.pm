@@ -13,8 +13,10 @@ use Carp;
 use App::SpamcupNG::HTMLParse (
     'find_next_id',       'find_errors',
     'find_warnings',      'find_spam_header',
-    'find_best_contacts', 'find_receivers'
-    );
+    'find_best_contacts', 'find_receivers',
+    'find_message_age',   'find_header_info'
+);
+use App::SpamcupNG::Summary;
 use App::SpamcupNG::UserAgent;
 
 use constant TARGET_HTML_FORM => 'sendreport';
@@ -28,7 +30,7 @@ our %OPTIONS_MAP = (
     'alt_code'   => 'c',
     'alt_user'   => 'l',
     'verbosity'  => 'V',
-    );
+);
 
 my %regexes = (
     no_user_id => qr/\>No userid found\</i,
@@ -193,7 +195,7 @@ sub config_logger {
         WARN  => $WARN,
         ERROR => $ERROR,
         FATAL => $FATAL
-        );
+    );
     croak "The value '$level' is not a valid value for level"
         unless ( exists( $levels{$level} ) );
 
@@ -316,14 +318,17 @@ sub main_loop {
     return 0 if (_error_handling($response_ref));
     $logger->info('Log in completed');
     my $next_id;
+    my $summary = App::SpamcupNG::Summary->new;
 
     if ($response_ref) {
         $next_id = find_next_id( $response_ref );
 
-        if ($logger->is_debug) {
-            $logger->debug("ID of next SPAM report found: $next_id") if ($next_id);
+        if ( $logger->is_debug ) {
+            $logger->debug("ID of next SPAM report found: $next_id")
+                if ($next_id);
         }
 
+        $summary->set_tracking_id($next_id);
         return -1 unless ( defined($next_id) );
     }
     else {
@@ -353,12 +358,45 @@ sub main_loop {
     $response_ref = $ua->spam_report($next_id);
     return 0 unless($response_ref);
 
-    if ( my $warns_ref = find_warnings( $response_ref ) ) {
+    if ( $logger->is_debug ) {
+        $logger->debug( "Request to be sent:\n" . $req->as_string );
+    }
+
+    my $res = $ua->request($req);
+
+    if ( $logger->is_debug ) {
+        $logger->debug( "Got HTTP response:\n" . $res->as_string );
+    }
+
+    unless ( $res->is_success ) {
+        $logger->fatal("Can't connect to server. Try again later.");
+        return 0;
+    }
+
+    if ( my $age_info_ref = find_message_age( \( $res->content ) ) ) {
+        if ($age_info_ref) {
+
+            if ( $logger->is_info ) {
+                $logger->info( 'Message age: '
+                        . $age_info_ref->[0]
+                        . ', unit: '
+                        . $age_info_ref->[1] );
+            }
+
+            $summary->set_age( $age_info_ref->[0] );
+            $summary->set_age_unit( $age_info_ref->[1] );
+        }
+        else {
+            $logger->warn('Failed to parse SPAM age information');
+        }
+    }
+
+    if ( my $warns_ref = find_warnings( \( $res->content ) ) ) {
 
         if ( @{$warns_ref} ) {
 
             foreach my $warning ( @{$warns_ref} ) {
-                $logger->warn($warning);
+                $logger->warn( $warning->message );
             }
 
         }
@@ -367,7 +405,22 @@ sub main_loop {
         }
     }
 
-    return 0 if (_error_handling($response_ref));
+    if ( my $errors_ref = find_errors( \( $res->content ) ) ) {
+
+        foreach my $error ( @{$errors_ref} ) {
+            if ( $error->is_fatal() ) {
+                $logger->fatal($error->message);
+
+              # must stop processing the HTML for this report and move to next
+                return 0;
+            }
+            else {
+                $logger->error( $error->message );
+            }
+
+        }
+
+    }
 
     # parsing the SPAM
     my $_cancel  = 0;
@@ -376,16 +429,16 @@ sub main_loop {
     unless ($base_uri) {
         $logger->fatal(
             'No base URI found. Internal error? Please report this error by registering an issue on Github'
-            );
+        );
     }
 
     if ( $logger->is_debug ) {
         $logger->debug("Base URI is $base_uri");
     }
 
+    my $best_ref = find_best_contacts( \( $res->content ) );
+    $summary->set_contacts($best_ref);
     if ( $logger->is_info ) {
-        my $best_ref = find_best_contacts( $response_ref );
-
         if ( @{$best_ref} ) {
             my $best_as_text = join( ', ', @$best_ref );
             $logger->info("Best contacts for SPAM reporting: $best_as_text");
@@ -395,10 +448,17 @@ sub main_loop {
     my $form = _report_form( $response_ref, $base_uri );
     $logger->fatal(
         'Could not find the HTML form to report the SPAM! May be a temporary Spamcop.net error, try again later! Quitting...'
-        ) unless ($form);
+    ) unless ($form);
+
+    my $spam_header_info = find_header_info( \( $res->content ) );
+    $summary->set_mailer( $spam_header_info->{mailer} );
+    $summary->set_content_type( $spam_header_info->{content_type} );
 
     if ( $logger->is_info ) {
-        my $spam_header_ref = find_spam_header($response_ref);
+        $logger->info( 'X-Mailer: ' . $summary->to_text('mailer') );
+        $logger->info( 'Content-Type: ' . $summary->to_text('content_type') );
+
+        my $spam_header_ref = find_spam_header( \( $res->content ) );
 
         if ($spam_header_ref) {
             my $as_string = join( "\n", @$spam_header_ref );
@@ -463,6 +523,10 @@ sub main_loop {
         $logger->info($message);
     }
 
+    $logger->fatal(
+        'Could not find the HTML form to report the SPAM! May be a temporary Spamcop website error, try again later! Quitting...'
+    ) unless ($form);
+
     # Run without confirming each spam? Stupid. :)
     unless ( $opts_ref->{stupid} ) {
         print "* Are you sure this is SPAM? [y/N] ";
@@ -517,7 +581,7 @@ sub main_loop {
         my $delay = $1;
         $logger->warn(
             "Spamcop seems to be currently overloaded. Trying again in $delay seconds. Wait..."
-            );
+        );
         sleep $opts_ref->{delay};
 
         # fool it to avoid duplicate detector
@@ -531,7 +595,7 @@ sub main_loop {
     {
         $logger->warn(
             'No source IP address found. Your report might be missing headers. Skipping.'
-            );
+        );
         return 0;
     }
     else {
@@ -539,14 +603,14 @@ sub main_loop {
       # Shit happens. If you know it should be parseable, please report a bug!
         $logger->warn(
             "Can't parse Spamcop.net's HTML. If this does not happen very often you can ignore this warning. Otherwise check if there's new version available. Skipping."
-            );
+        );
         return 0;
     }
 
     if ( $opts_ref->{check_only} ) {
         $logger->info(
             'You gave option -n, so we\'ll stop here. The SPAM was NOT reported.'
-            );
+        );
         exit;
     }
 
@@ -578,17 +642,14 @@ sub main_loop {
     }
 
     # parse response
-    my $receivers_ref = find_receivers( $response_ref );
+    my $receivers_ref = find_receivers( \( $res->content ) );
+    $summary->set_receivers($receivers_ref);
 
     if ( scalar( @{$receivers_ref} ) > 0 ) {
 
-        # print the report
         if ( $logger->is_info ) {
-
-            my $report = join( "\n", @{$receivers_ref} );
-            $logger->info(
-                "Spamcop.net sent following SPAM reports:\n$report");
-
+            $logger->info( 'Spamcop.net sent following SPAM reports: '
+                    . $summary->to_text('receivers') );
             $logger->info('Finished processing.');
         }
 
@@ -604,6 +665,9 @@ EOM
         $logger->warn($msg);
         $logger->warn( $response_ref );
     }
+
+    $logger->debug( 'SPAM report summary: ' . $summary->as_text )
+        if ( $logger->is_debug );
 
     return 1;
 
