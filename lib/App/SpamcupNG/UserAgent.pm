@@ -45,16 +45,15 @@ sub new {
         code_login_url   => 'http://www.spamcop.net/?code=',
         report_url       => 'http://www.spamcop.net/sc?id=',
         current_base_url => undef
-    };
+        };
 
     bless $self, $class;
 
     my $ua = LWP::UserAgent->new(
-        {   agent             => ( $self->{name} . '/' . $version ),
-            protocols_allowed => ['https'],
-            cookie_jar        => HTTP::CookieJar::LWP->new
-        }
-    );
+        agent             => ( $self->{name} . '/' . $version ),
+        protocols_allowed => ['https'],
+        cookie_jar        => HTTP::CookieJar::LWP->new
+        );
     $self->{user_agent} = $ua;
     return $self;
 }
@@ -85,7 +84,7 @@ Returns the HTML content as a scalar reference.
 =cut
 
 sub _redact_auth_req {
-    my $request  = shift;
+    my ($self, $request) = @_;
     my @lines    = split( "\n", $request->as_string );
     my $secret   = ( split( /\s/, $lines[1] ) )[2];
     my $redacted = '*' x length($secret);
@@ -132,7 +131,7 @@ sub login {
         $logger->warn($status);
         $logger->fatal(
             'Cannot connect to server or invalid credentials. Please verify your username and password and try again.'
-        );
+            );
     }
 
     return undef;
