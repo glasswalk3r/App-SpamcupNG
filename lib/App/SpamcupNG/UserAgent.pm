@@ -2,9 +2,10 @@ package App::SpamcupNG::UserAgent;
 use warnings;
 use strict;
 use LWP::UserAgent 6.60;
-use HTTP::Cookies 6.10;
 use HTTP::Request 6.35;
 use Log::Log4perl 1.54 qw(get_logger :levels);
+use HTTP::CookieJar::LWP 0.012;
+use Mozilla::PublicSuffix v1.0.6;
 
 # VERSION
 
@@ -48,9 +49,13 @@ sub new {
 
     bless $self, $class;
 
-    my $ua = LWP::UserAgent->new();
-    $ua->agent( $self->{name} . '/' . $version );
-    $ua->cookie_jar( HTTP::Cookies->new() );
+    my $ua = LWP::UserAgent->new(
+        {
+            agent      => ( $self->{name} . '/' . $version ),
+            protocols_allowed => [ 'https' ],
+            cookie_jar => HTTP::CookieJar::LWP->new
+        }
+        );
     $self->{user_agent} = $ua;
     return $self;
 }
@@ -86,6 +91,7 @@ sub login {
     my $request;
 
     # TODO: check if the cookie is still valid before trying to login again
+    $logger->info($self->cookie_jar->as_string);
 
     if ($password) {
         $request = HTTP::Request->new( GET => 'http://members.spamcop.net/' );
