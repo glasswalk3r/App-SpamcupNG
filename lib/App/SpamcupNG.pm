@@ -358,22 +358,7 @@ sub main_loop {
     $response_ref = $ua->spam_report($next_id);
     return 0 unless($response_ref);
 
-    if ( $logger->is_debug ) {
-        $logger->debug( "Request to be sent:\n" . $req->as_string );
-    }
-
-    my $res = $ua->request($req);
-
-    if ( $logger->is_debug ) {
-        $logger->debug( "Got HTTP response:\n" . $res->as_string );
-    }
-
-    unless ( $res->is_success ) {
-        $logger->fatal("Can't connect to server. Try again later.");
-        return 0;
-    }
-
-    if ( my $age_info_ref = find_message_age( \( $res->content ) ) ) {
+    if ( my $age_info_ref = find_message_age( $response_ref ) ) {
         if ($age_info_ref) {
 
             if ( $logger->is_info ) {
@@ -391,7 +376,7 @@ sub main_loop {
         }
     }
 
-    if ( my $warns_ref = find_warnings( \( $res->content ) ) ) {
+    if ( my $warns_ref = find_warnings( $response_ref ) ) {
 
         if ( @{$warns_ref} ) {
 
@@ -405,7 +390,7 @@ sub main_loop {
         }
     }
 
-    if ( my $errors_ref = find_errors( \( $res->content ) ) ) {
+    if ( my $errors_ref = find_errors( $response_ref ) ) {
 
         foreach my $error ( @{$errors_ref} ) {
             if ( $error->is_fatal() ) {
@@ -436,7 +421,7 @@ sub main_loop {
         $logger->debug("Base URI is $base_uri");
     }
 
-    my $best_ref = find_best_contacts( \( $res->content ) );
+    my $best_ref = find_best_contacts( $response_ref );
     $summary->set_contacts($best_ref);
     if ( $logger->is_info ) {
         if ( @{$best_ref} ) {
@@ -450,7 +435,7 @@ sub main_loop {
         'Could not find the HTML form to report the SPAM! May be a temporary Spamcop.net error, try again later! Quitting...'
     ) unless ($form);
 
-    my $spam_header_info = find_header_info( \( $res->content ) );
+    my $spam_header_info = find_header_info( $response_ref );
     $summary->set_mailer( $spam_header_info->{mailer} );
     $summary->set_content_type( $spam_header_info->{content_type} );
 
@@ -458,7 +443,7 @@ sub main_loop {
         $logger->info( 'X-Mailer: ' . $summary->to_text('mailer') );
         $logger->info( 'Content-Type: ' . $summary->to_text('content_type') );
 
-        my $spam_header_ref = find_spam_header( \( $res->content ) );
+        my $spam_header_ref = find_spam_header( $response_ref );
 
         if ($spam_header_ref) {
             my $as_string = join( "\n", @$spam_header_ref );
@@ -642,7 +627,7 @@ sub main_loop {
     }
 
     # parse response
-    my $receivers_ref = find_receivers( \( $res->content ) );
+    my $receivers_ref = find_receivers( $response_ref );
     $summary->set_receivers($receivers_ref);
 
     if ( scalar( @{$receivers_ref} ) > 0 ) {
