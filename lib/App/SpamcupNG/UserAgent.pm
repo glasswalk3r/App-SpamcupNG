@@ -45,17 +45,16 @@ sub new {
         code_login_url   => 'http://www.spamcop.net/?code=',
         report_url       => 'http://www.spamcop.net/sc?id=',
         current_base_url => undef
-        };
+    };
 
     bless $self, $class;
 
     my $ua = LWP::UserAgent->new(
-        {
-            agent      => ( $self->{name} . '/' . $version ),
-            protocols_allowed => [ 'https' ],
-            cookie_jar => HTTP::CookieJar::LWP->new
+        {   agent             => ( $self->{name} . '/' . $version ),
+            protocols_allowed => ['https'],
+            cookie_jar        => HTTP::CookieJar::LWP->new
         }
-        );
+    );
     $self->{user_agent} = $ua;
     return $self;
 }
@@ -85,13 +84,22 @@ Returns the HTML content as a scalar reference.
 
 =cut
 
+sub _redact_auth_req {
+    my $request  = shift;
+    my @lines    = split( "\n", $request->as_string );
+    my $secret   = ( split( /\s/, $lines[1] ) )[2];
+    my $redacted = '*' x length($secret);
+    $lines[1] =~ s/$secret/$redacted/;
+    return join( "\n", @lines );
+}
+
 sub login {
     my ( $self, $id, $password ) = @_;
     my $logger = get_logger('SpamcupNG');
     my $request;
 
     # TODO: check if the cookie is still valid before trying to login again
-    $logger->info($self->cookie_jar->as_string);
+    $logger->info( $self->cookie_jar->as_string );
 
     if ($password) {
         $request = HTTP::Request->new( GET => 'http://members.spamcop.net/' );
@@ -103,7 +111,8 @@ sub login {
     }
 
     if ( $logger->is_debug() ) {
-        $logger->debug( "Request details:\n" . $request->as_string );
+        $logger->debug(
+            "Request details:\n" . ( $self->_redact_auth_req($request) ) );
     }
 
     my $response = $self->{user_agent}->request($request);
@@ -123,7 +132,7 @@ sub login {
         $logger->warn($status);
         $logger->fatal(
             'Cannot connect to server or invalid credentials. Please verify your username and password and try again.'
-            );
+        );
     }
 
     return undef;

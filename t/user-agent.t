@@ -2,6 +2,7 @@ use warnings;
 use strict;
 use Test::More;
 use Test::Exception;
+use HTTP::Request;
 
 use App::SpamcupNG::UserAgent;
 
@@ -26,6 +27,13 @@ is( $instance->user_agent,
     );
 dies_ok { App::SpamcupNG::UserAgent->new } 'dies with missing parameter';
 like $@, qr/version\sis\srequired/;
+
+my $req = HTTP::Request->new( GET => 'http://members.spamcop.net/' );
+$req->authorization_basic( 'foobar', '12345678910' );
+my $expected = 'GET http://members.spamcop.net/' . "\n"
+    . 'Authorization: Basic ************************';
+is( $instance->_redact_auth_req($req),
+    $expected, '_redact_auth_req works' );
 
 done_testing;
 
