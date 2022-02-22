@@ -41,9 +41,9 @@ sub new {
     my $self = {
         name             => 'spamcup user agent',
         version          => $version,
-        members_url      => 'http://members.spamcop.net/',
-        code_login_url   => 'http://www.spamcop.net/?code=',
-        report_url       => 'http://www.spamcop.net/sc?id=',
+        members_url      => 'https://members.spamcop.net/',
+        code_login_url   => 'https://www.spamcop.net/?code=',
+        report_url       => 'https://www.spamcop.net/sc?id=',
         current_base_url => undef
         };
 
@@ -84,7 +84,7 @@ Returns the HTML content as a scalar reference.
 =cut
 
 sub _redact_auth_req {
-    my ($self, $request) = @_;
+    my ( $self, $request ) = @_;
     my @lines    = split( "\n", $request->as_string );
     my $secret   = ( split( /\s/, $lines[1] ) )[2];
     my $redacted = '*' x length($secret);
@@ -97,16 +97,17 @@ sub login {
     my $logger = get_logger('SpamcupNG');
     my $request;
 
-    # TODO: check if the cookie is still valid before trying to login again
-    $logger->info( $self->cookie_jar->as_string );
+# TODO: check if the cookie is still valid before trying to login again
+# TODO: implement HTML form authentication
+#$logger->info( 'Available cookies before auth: ' . Dumper( $self->{user_agent}->cookie_jar->dump_cookies ) );
 
     if ($password) {
-        $request = HTTP::Request->new( GET => 'http://members.spamcop.net/' );
+        $request = HTTP::Request->new( GET => $self->{members_url} );
         $request->authorization_basic( $id, $password );
     }
     else {
         $request = HTTP::Request->new(
-            GET => 'http://www.spamcop.net/?code=' . $id );
+            GET => $self->{code_login_url} . $id );
     }
 
     if ( $logger->is_debug() ) {
@@ -117,9 +118,10 @@ sub login {
     my $response = $self->{user_agent}->request($request);
 
     if ( $logger->is_debug() ) {
-        $logger->debug( "Got HTTP response:\n" . $response->as_string );
+        $logger->debug( "Got response:\n" . $response->as_string );
     }
 
+#$logger->info( 'Available cookies after auth: ' . Dumper( $self->{user_agent}->cookie_jar->dump_cookies ) );
     return \( $response->content ) if ( $response->is_success );
 
     my $status = $response->status_line();
