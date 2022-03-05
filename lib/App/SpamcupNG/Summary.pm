@@ -197,7 +197,7 @@ sub na {
     return 'not available';
 }
 
-sub fields {
+sub _fields {
     my @fields = sort($fields->members);
     return \@fields;
 }

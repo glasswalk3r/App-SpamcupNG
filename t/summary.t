@@ -5,11 +5,10 @@ use Test::More tests => 22;
 use App::SpamcupNG::Summary;
 
 my $instance = new_ok('App::SpamcupNG::Summary');
-can_ok( $instance, qw(new as_text tracking_url to_text set_receivers fields) );
-is(ref($instance->fields), 'ARRAY', 'fields method returns the expected reference type');
+can_ok( $instance, qw(new as_text tracking_url to_text set_receivers _fields) );
+is(ref($instance->_fields), 'ARRAY', '_fields method returns the expected reference type');
 my @expected_fields = sort(('tracking_id', 'mailer', 'content_type', 'age', 'age_unit', 'contacts', 'receivers'));
-
-is_deeply($instance->fields, \@expected_fields, 'fields returns all expected members');
+is_deeply($instance->_fields, \@expected_fields, 'fields returns all expected members');
 note('summary with nothing set');
 is( $instance->as_text,
     'age_unit=not available,content_type=not available,mailer=not available,tracking_id=not available,age=not available,receivers=(),contacts=()',
