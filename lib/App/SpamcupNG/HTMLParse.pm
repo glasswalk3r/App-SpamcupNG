@@ -97,6 +97,7 @@ sub find_header_info {
                     my $encoding = lc( $wanted[0] );
                     my $charset  = lc( $wanted[1] );
                     $charset =~ s/^\s+//;
+                    $charset =~ tr/"//d;
 
                     my $not_useful = 'boundary';
 
