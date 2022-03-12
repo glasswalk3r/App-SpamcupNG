@@ -119,12 +119,14 @@ sub _redact_auth_req {
     my ( $self, $request ) = @_;
     my @lines;
 
+    return $request->as_string if ( $self->_is_authenticated );
+
     if ( $request->method eq 'POST' ) {
         push( @lines, _request_line($request) );
         push( @lines, $request->headers_as_string );
         my @params = split( '&', $request->content );
-        my %params
-            = map { my @tmp = split( '=', $_ ); $tmp[0] => $tmp[1] } @params;
+        my %params =
+            map { my @tmp = split( '=', $_ ); $tmp[0] => $tmp[1] } @params;
         croak(    'Unexpected request content, missing '
                 . $self->{password_field}
                 . ' field' )
@@ -147,9 +149,9 @@ sub _redact_auth_req {
 }
 
 sub _dump_cookies {
-    my $self    = shift;
-    my @cookies = $self->{user_agent}
-        ->cookie_jar->dump_cookies( { persistent => 1 } );
+    my $self = shift;
+    my @cookies =
+        $self->{user_agent}->cookie_jar->dump_cookies( { persistent => 1 } );
     my $counter = 0;
     my @dump;
 
@@ -198,8 +200,8 @@ sub login {
             }
         }
         else {
-            $request
-                = HTTP::Request->new( GET => $self->{code_login_url} . $id );
+            $request =
+                HTTP::Request->new( GET => $self->{code_login_url} . $id );
         }
     }
 
@@ -230,7 +232,7 @@ sub login {
 
         if ( ($password) and ( $is_basic == 0 ) ) {
             $logger->warn('Retrying with basic authentication');
-            $self->login( $id, $password, 1 );
+            return $self->login( $id, $password, 1 );
         }
 
         $logger->fatal(
@@ -254,8 +256,8 @@ Returns the HTML content as a scalar reference.
 sub spam_report {
     my ( $self, $report_id ) = @_;
     my $logger = get_logger('SpamcupNG');
-    my $request
-        = HTTP::Request->new( GET => $self->{report_url} . $report_id );
+    my $request =
+        HTTP::Request->new( GET => $self->{report_url} . $report_id );
 
     if ( $logger->is_debug ) {
         $logger->debug( "Request to be sent:\n" . $request->as_string );
