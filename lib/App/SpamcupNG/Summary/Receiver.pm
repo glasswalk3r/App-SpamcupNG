@@ -66,7 +66,7 @@ sub new {
     my $self = {
         report_id => $attribs_ref->[1],
         email     => $attribs_ref->[0],
-        };
+    };
 
     bless $self, $class;
     lock_hash( %{$self} );
