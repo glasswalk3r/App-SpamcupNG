@@ -6,8 +6,8 @@ use HTTP::Request;
 
 use App::SpamcupNG::UserAgent;
 
-my $instance =
-    new_ok( 'App::SpamcupNG::UserAgent' => ['0.1.0'], 'new instance' );
+my $instance
+    = new_ok( 'App::SpamcupNG::UserAgent' => ['0.1.0'], 'new instance' );
 my @expected_attribs = (
     'name',       'version',          'members_url', 'code_login_url',
     'report_url', 'current_base_url', 'domain',      'password_field',
