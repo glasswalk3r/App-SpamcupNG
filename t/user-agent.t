@@ -6,10 +6,13 @@ use HTTP::Request;
 
 use App::SpamcupNG::UserAgent;
 
-my $instance
-    = new_ok( 'App::SpamcupNG::UserAgent' => ['0.1.0'], 'new instance' );
-my @expected_attribs
-    = qw(name version members_url code_login_url report_url current_base_url user_agent );
+my $instance =
+    new_ok( 'App::SpamcupNG::UserAgent' => ['0.1.0'], 'new instance' );
+my @expected_attribs = (
+    'name',       'version',          'members_url', 'code_login_url',
+    'report_url', 'current_base_url', 'domain',      'password_field',
+    'domain',     'form_login_url'
+);
 
 foreach my $expected (@expected_attribs) {
     ok(
@@ -20,8 +23,13 @@ foreach my $expected (@expected_attribs) {
 
 is( $instance->base(), undef, 'base URL is undefined' );
 isa_ok( $instance->{user_agent}, 'LWP::UserAgent', 'user_agent attribute' );
-my @expected_methods
-    = qw(login spam_report base complete_report user_agent _redact_auth_req);
+my @expected_methods = (
+    'login',            'spam_report',
+    'base',             'complete_report',
+    'user_agent',       '_request_line',
+    '_redact_auth_req', '_dump_cookies',
+    '_is_authenticated'
+);
 can_ok( $instance, @expected_methods );
 is(
     $instance->user_agent,
