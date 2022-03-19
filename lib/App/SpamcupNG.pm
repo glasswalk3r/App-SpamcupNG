@@ -433,7 +433,7 @@ sub main_loop {
     my $form = _report_form( $response_ref, $base_uri );
     $logger->fatal(
         'Could not find the HTML form to report the SPAM! May be a temporary Spamcop.net error, try again later! Quitting...'
-    ) unless ($form);
+    ) unless (defined($form));
 
     my $spam_header_info = find_header_info( $response_ref );
     $summary->set_mailer( $spam_header_info->{mailer} );
