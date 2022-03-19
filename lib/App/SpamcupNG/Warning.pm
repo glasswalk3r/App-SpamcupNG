@@ -33,7 +33,7 @@ sub new {
 
     die 'message must be an array reference with length of at least 1'
         unless ( ( ref($message_ref) eq 'ARRAY' )
-        and ( scalar(@{$message_ref}) > 0 ) );
+        and ( scalar( @{$message_ref} ) > 0 ) );
 
     my @trimmed;
 
