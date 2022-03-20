@@ -18,6 +18,7 @@ use App::SpamcupNG::HTMLParse (
 );
 use App::SpamcupNG::Summary;
 use App::SpamcupNG::UserAgent;
+use App::SpamcupNG::Summary::Recorder;
 
 use constant TARGET_HTML_FORM => 'sendreport';
 
@@ -439,6 +440,7 @@ sub main_loop {
     my $spam_header_info = find_header_info($response_ref);
     $summary->set_mailer( $spam_header_info->{mailer} );
     $summary->set_content_type( $spam_header_info->{content_type} );
+    $summary->set_charset($spam_header_info->{charset});
 
     if ( $logger->is_info ) {
         $logger->info( 'X-Mailer: ' . $summary->to_text('mailer') );
@@ -656,6 +658,10 @@ EOM
 
     $logger->debug( 'SPAM report summary: ' . $summary->as_text )
         if ( $logger->is_debug );
+
+    my $recorder = App::SpamcupNG::Summary::Recorder->new('/tmp/spamcup.db');
+    $recorder->init;
+    $recorder->save($summary);
 
     return 1;
 
