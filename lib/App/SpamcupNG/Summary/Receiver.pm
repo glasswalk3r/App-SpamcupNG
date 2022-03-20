@@ -41,6 +41,7 @@ web interface does not exports that info).
 
 =cut
 
+# TODO: follow best practice
 my @fields = ( 'email', 'report_id' );
 __PACKAGE__->mk_ro_accessors(@fields);
 
