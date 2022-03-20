@@ -8,7 +8,7 @@ use File::Spec;
 use Hash::Util qw(lock_hash);
 use Exporter 'import';
 use Log::Log4perl 1.54 qw(get_logger :levels);
-use Carp;
+use Carp qw(confess);
 
 use App::SpamcupNG::HTMLParse (
     'find_next_id',       'find_errors',
@@ -31,6 +31,7 @@ our %OPTIONS_MAP = (
     'alt_code'   => 'c',
     'alt_user'   => 'l',
     'verbosity'  => 'V',
+    'database' => { enabled => 0}
 );
 
 my %regexes = (
@@ -81,11 +82,13 @@ configuration file.
 sub read_config {
     my ( $cfg, $cmd_opts ) = @_;
     my $data = LoadFile($cfg);
+    confess 'second parameter must be a hash reference'
+        unless ( ref($cmd_opts) eq 'HASH' );
 
     # sanity checking
     for my $opt ( keys( %{ $data->{ExecutionOptions} } ) ) {
-        die
-"$opt is not a valid option for configuration files. Check the documentation."
+        confess
+"'$opt' is not a valid option for configuration files. Check the documentation."
             unless ( exists( $OPTIONS_MAP{$opt} ) );
     }
 
@@ -185,9 +188,9 @@ L<Log::Log4perl> for more details about the levels.
 
 sub config_logger {
     my ( $level, $log_file ) = @_;
-    croak "Must receive a string for the level parameter"
+    confess "Must receive a string for the level parameter"
         unless ( ( defined($level) ) and ( $level ne '' ) );
-    croak "Must receive a string for the log file parameter"
+    confess "Must receive a string for the log file parameter"
         unless ( ( defined($log_file) ) and ( $log_file ne '' ) );
 
 # :TODO:21/01/2018 12:07:01:ARFREITAS: Do we need to import :levels from Log::Log4perl at all?
@@ -198,7 +201,7 @@ sub config_logger {
         ERROR => $ERROR,
         FATAL => $FATAL
     );
-    croak "The value '$level' is not a valid value for level"
+    confess "The value '$level' is not a valid value for level"
         unless ( exists( $levels{$level} ) );
 
     my $conf;
@@ -440,7 +443,7 @@ sub main_loop {
     my $spam_header_info = find_header_info($response_ref);
     $summary->set_mailer( $spam_header_info->{mailer} );
     $summary->set_content_type( $spam_header_info->{content_type} );
-    $summary->set_charset($spam_header_info->{charset});
+    $summary->set_charset( $spam_header_info->{charset} );
 
     if ( $logger->is_info ) {
         $logger->info( 'X-Mailer: ' . $summary->to_text('mailer') );
