@@ -90,10 +90,13 @@ properties below:
 ExecutionOptions:
   all: y
   stupid: y
-  nothing: n
+  check_only: n
   alt_code: n
   alt_user: n
   verbosity: INFO
+  database:
+    enabled: true
+    path: /var/spamcupng/reports.db
 Accounts:
   Yahoo!:
     e-mail: account@provider1.com.br
