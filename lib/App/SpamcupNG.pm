@@ -94,6 +94,11 @@ sub read_config {
 
     for my $opt ( keys(%OPTIONS_MAP) ) {
 
+        if ( $opt eq 'database' ) {
+            $cmd_opts->{$opt} = $data->{ExecutionOptions}->{$opt};
+            next;
+        }
+
         if ( $opt eq 'verbosity' ) {
             $cmd_opts->{'V'} = $data->{ExecutionOptions}->{$opt};
             next;

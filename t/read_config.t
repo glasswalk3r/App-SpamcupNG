@@ -23,8 +23,11 @@ my $expected_cfg_ref = {
     'alt_code'   => 0,
     'alt_user'   => 0,
     'check_only' => 0,
-    'database'   => 0,
-    'stupid'     => 1
+    'database'   => {
+        enabled => 1,
+        path    => '/var/spamcupng/reports.db'
+    },
+    'stupid' => 1
 };
 is_deeply( $config_ref, $expected_cfg_ref,
     'command line options were updated as expected' );
