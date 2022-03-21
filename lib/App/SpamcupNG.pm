@@ -31,7 +31,7 @@ our %OPTIONS_MAP = (
     'alt_code'   => 'c',
     'alt_user'   => 'l',
     'verbosity'  => 'V',
-    'database' => { enabled => 0}
+    'database'   => { enabled => 0 }
 );
 
 my %regexes = (
@@ -662,9 +662,15 @@ EOM
     $logger->debug( 'SPAM report summary: ' . $summary->as_text )
         if ( $logger->is_debug );
 
-    my $recorder = App::SpamcupNG::Summary::Recorder->new('/tmp/spamcup.db');
-    $recorder->init;
-    $recorder->save($summary);
+    if ( $opts_ref->{database}->{enabled} ) {
+        $logger->info( 'Persisting summary to SQLite database at '
+                . $opts_ref->{database}->{path} )
+            if ( $logger->is_info );
+        my $recorder = App::SpamcupNG::Summary::Recorder->new(
+            $opts_ref->{database}->{path} );
+        $recorder->init;
+        $recorder->save($summary);
+    }
 
     return 1;
 
