@@ -2,6 +2,7 @@ package App::SpamcupNG::Summary::Recorder;
 use strict;
 use warnings;
 use Carp qw(confess);
+use Hash::Util qw(lock_hash);
 use DBI 1.643;
 use DateTime 1.55;
 
@@ -40,8 +41,8 @@ file.
 =cut
 
 sub new {
-    my ( $class, $file ) = @_;
-    my $self = { db_file => $file };
+    my ( $class, $file, $now ) = @_;
+    my $self = { db_file => $file, now => $now };
 
     # TODO: add tables names for DRY also replacing in _save_attrib
     $self->{dbh} = DBI->connect( ( 'dbi:SQLite:dbname=' . $file ), '', '' )
@@ -135,6 +136,8 @@ CREATE TABLE IF NOT EXISTS summary_receiver (
 
 Persists a L<App::SpamcupNG::Summary> instance to the database.
 
+Returns "true" (in Perl terms) if everything goes fine.
+
 =cut
 
 sub save {
@@ -154,6 +157,8 @@ sub save {
             = $self->_save_attrib( $field_name, $summary->$method );
     }
 
+    lock_hash(%fields);
+
     my $summary_id = $self->_save_summary( $summary, \%fields );
 
     foreach my $receiver ( @{ $summary->get_receivers } ) {
@@ -162,6 +167,7 @@ sub save {
             $receiver->report_id );
     }
 
+    return 1;
 }
 
 sub _save_sum_rec {
@@ -177,15 +183,15 @@ VALUES(?, ?, ?)
 
 sub _save_summary {
     my ( $self, $summary, $fields_ref ) = @_;
-    my $now    = DateTime->now;
+    my $now    = $self->{now} ? $self->{now} : DateTime->now->epoch;
     my $insert = q{
 INSERT INTO summary
 (tracking_id, created, charset_id, content_type_id, age, age_unit_id, mailer_id)
 VALUES (?, ?, ?, ?, ?, ?, ?)
 };
     my @values = (
-        $summary->get_tracking_id, $now->epoch,
-        $fields_ref->{charset_id}, $fields_ref->{content_type},
+        $summary->get_tracking_id, $now,
+        $fields_ref->{charset},    $fields_ref->{content_type},
         $summary->get_age,         $fields_ref->{age_unit},
         $fields_ref->{mailer}
     );
