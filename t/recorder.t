@@ -1,6 +1,6 @@
 use warnings;
 use strict;
-use Test::More;
+use Test::More tests=> 10;
 use File::Spec;
 use Test::TempDir::Tiny;
 use DBI;
@@ -68,8 +68,6 @@ foreach my $table ( keys(%expected_results) ) {
         "got the expected on '$table' table"
     ) or diag( explain($result_ref) );
 }
-
-done_testing;
 
 sub query_single_table {
     my ( $dbh, $table ) = @_;
