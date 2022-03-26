@@ -1,6 +1,6 @@
 use warnings;
 use strict;
-use Test::More tests=> 10;
+use Test::More tests => 10;
 use File::Spec;
 use Test::TempDir::Tiny;
 use DBI;
