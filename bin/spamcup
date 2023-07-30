@@ -53,9 +53,7 @@ if ( $opts{h} ) {
     print_footer();
 }
 
-# perl -E 'say $ENV{HOMEPATH}; say $^O'
-
-my $cfg = File::Spec->catfile( $ENV{HOME}, '.spamcupNG.yml' );
+my $cfg = File::Spec->catfile( my_home(), '.spamcupNG.yml' );
 
 if ( -e $cfg ) {
     $accounts = read_config( $cfg, \%opts );
@@ -65,7 +63,7 @@ if ( -e $cfg ) {
 $opts{V} = 'INFO' unless ( exists( $opts{V} ) );
 $opts{delay} = DELAY unless ( exists($opts{delay}) );
 
-config_logger( $opts{V}, File::Spec->catfile( $ENV{HOME}, 'spamcup.log' ) );
+config_logger( $opts{V}, File::Spec->catfile( my_home(), 'spamcup.log' ) );
 my $logger = Log::Log4perl->get_logger('SpamcupNG');
 
 if ( ( $logger->is_warn() ) and ( not -e $cfg ) ) {
@@ -101,6 +99,7 @@ if ( $logger->is_info() ) {
 
 my ( $ident, $pass ) = define_auth( \%opts );
 compat_opts( $ident, $pass, \%opts );
+$logger->logdie('Could not define authentication method through configuration') unless($ident || $accounts);
 my $ua = App::SpamcupNG::UserAgent->new($VERSION);
 
 if ($accounts) {
@@ -211,6 +210,10 @@ sub define_auth {
     }
 
     return $ident, $pass;
+}
+
+sub my_home {
+    return ($^O eq 'MSWin32') ? $ENV{HOMEPATH} : $ENV{HOME};
 }
 
 __END__
