@@ -1,3 +1,5 @@
+[![Perl application](https://github.com/glasswalk3r/App-SpamcupNG/actions/workflows/unit-test.yml/badge.svg)](https://github.com/glasswalk3r/App-SpamcupNG/actions/workflows/unit-test.yml)
+
 # App-SpamcupNG
 
 ## Description
