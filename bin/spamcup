@@ -2,7 +2,6 @@
 
 use warnings;
 use strict;
-use HTML::Form 6.03;
 use HTTP::Cookies 6.01;
 use Getopt::Std;
 use File::Spec;

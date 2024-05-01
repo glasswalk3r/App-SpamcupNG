@@ -1,7 +1,7 @@
 package App::SpamcupNG;
 use warnings;
 use strict;
-use HTML::Form 6.07;
+use HTML::Form 6.11;
 use Getopt::Std;
 use YAML::XS 0.88 qw(LoadFile);
 use File::Spec;

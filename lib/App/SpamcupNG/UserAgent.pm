@@ -3,11 +3,11 @@ use warnings;
 use strict;
 use Carp qw(confess);
 use LWP::UserAgent 6.72;
-use HTTP::Request 6.36;
+use HTTP::Request 6.44;
 use Log::Log4perl 1.57 qw(get_logger :levels);
 use HTTP::CookieJar::LWP 0.014;
 use Mozilla::PublicSuffix v1.0.6;
-use HTTP::Request::Common qw(POST);
+use HTTP::Request::Common 6.44 qw(POST);
 
 # VERSION
 
