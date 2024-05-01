@@ -113,7 +113,7 @@ take care of file permissions to avoid disclosure of your SpamCop.net password!
 # Copyright and license
 
 This software is copyright (c) 2018 of Alceu Rodrigues de Freitas Junior,
-<arfreitas@cpan.org>
+<glasswalk3r@yahoo.com.br>
 
 This file is part of App-SpamcupNG distribution.
 
