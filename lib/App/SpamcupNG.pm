@@ -3,11 +3,11 @@ use warnings;
 use strict;
 use HTML::Form 6.07;
 use Getopt::Std;
-use YAML::XS 0.62 qw(LoadFile);
+use YAML::XS 0.88 qw(LoadFile);
 use File::Spec;
 use Hash::Util qw(lock_hash);
 use Exporter 'import';
-use Log::Log4perl 1.54 qw(get_logger :levels);
+use Log::Log4perl 1.57 qw(get_logger :levels);
 use Carp qw(confess);
 
 use App::SpamcupNG::HTMLParse (
@@ -120,7 +120,7 @@ sub read_config {
 
 sub _report_form {
     my ( $html_ref, $base_uri ) = @_;
-    die 'Must receive an scalar reference of the HTML response'
+    confess 'Must receive an scalar reference of the HTML response'
       unless ( ref($html_ref) );
 
     my @forms = HTML::Form->parse( $$html_ref, $base_uri );

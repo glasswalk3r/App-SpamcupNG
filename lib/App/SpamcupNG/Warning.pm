@@ -1,6 +1,7 @@
 package App::SpamcupNG::Warning;
 use strict;
 use warnings;
+use Carp qw(confess);
 
 # VERSION
 
@@ -31,7 +32,7 @@ Expects as parameter an array reference containing the associated strings.
 sub new {
     my ( $class, $message_ref ) = @_;
 
-    die 'message must be an array reference with length of at least 1'
+    confess 'message must be an array reference with length of at least 1'
       unless ( ( ref($message_ref) eq 'ARRAY' )
         and ( scalar( @{$message_ref} ) > 0 ) );
 

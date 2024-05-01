@@ -2,11 +2,9 @@
 
 use warnings;
 use strict;
-use LWP::UserAgent 6.05;
 use HTML::Form 6.03;
 use HTTP::Cookies 6.01;
 use Getopt::Std;
-use YAML::XS 0.62 qw(LoadFile);
 use File::Spec;
 use App::SpamcupNG qw(main_loop read_config %OPTIONS_MAP config_logger);
 use App::SpamcupNG::UserAgent;

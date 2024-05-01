@@ -1,6 +1,8 @@
 package App::SpamcupNG::Error::Mailhost;
 use strict;
 use warnings;
+use Carp qw(confess);
+
 use parent 'App::SpamcupNG::Error';
 
 # VERSION
@@ -27,7 +29,7 @@ index is a string of the message.
 
 sub new {
     my ( $class, $message_ref ) = @_;
-    die 'message must be an array reference with size = 3'
+    confess 'message must be an array reference with size = 3'
       unless ( ( ref($message_ref) eq 'ARRAY' )
         and ( scalar( @{$message_ref} ) == 3 ) );
 

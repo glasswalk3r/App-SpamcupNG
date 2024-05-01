@@ -2,6 +2,7 @@ package App::SpamcupNG::Warning::Factory;
 use strict;
 use warnings;
 use Exporter 'import';
+use Carp qw(confess);
 
 use App::SpamcupNG::Warning;
 use App::SpamcupNG::Warning::Yum;
@@ -48,7 +49,7 @@ Returns the instance.
 sub create_warning {
     my $message_ref = shift;
 
-    die 'message must be an array reference'
+    confess 'message must be an array reference'
       unless ( ( ref($message_ref) eq 'ARRAY' )
         and ( scalar( @{$message_ref} ) > 0 ) );
 

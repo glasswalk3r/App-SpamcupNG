@@ -1,11 +1,11 @@
 package App::SpamcupNG::UserAgent;
 use warnings;
 use strict;
-use Carp qw(croak);
-use LWP::UserAgent 6.60;
+use Carp qw(confess);
+use LWP::UserAgent 6.72;
 use HTTP::Request 6.36;
-use Log::Log4perl 1.54 qw(get_logger :levels);
-use HTTP::CookieJar::LWP 0.012;
+use Log::Log4perl 1.57 qw(get_logger :levels);
+use HTTP::CookieJar::LWP 0.014;
 use Mozilla::PublicSuffix v1.0.6;
 use HTTP::Request::Common qw(POST);
 
@@ -38,7 +38,7 @@ Returns a new instance.
 
 sub new {
     my ( $class, $version ) = @_;
-    die 'The parameter version is required' unless ($version);
+    confess 'The parameter version is required' unless ($version);
 
     my $self = {
         name             => 'SpamcupNG user agent',
