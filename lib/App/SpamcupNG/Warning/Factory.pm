@@ -49,22 +49,22 @@ sub create_warning {
     my $message_ref = shift;
 
     die 'message must be an array reference'
-        unless ( ( ref($message_ref) eq 'ARRAY' )
+      unless ( ( ref($message_ref) eq 'ARRAY' )
         and ( scalar( @{$message_ref} ) > 0 ) );
 
     return App::SpamcupNG::Warning::Yum->new($message_ref)
-        if ( $message_ref->[0] =~ $yum_regex );
+      if ( $message_ref->[0] =~ $yum_regex );
     return App::SpamcupNG::Warning->new($message_ref);
 }
 
 =head1 AUTHOR
 
-Alceu Rodrigues de Freitas Junior, E<lt>arfreitas@cpan.orgE<gt>
+Alceu Rodrigues de Freitas Junior, E<lt>glasswalk3r@yahoo.com.brE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
 This software is copyright (c) 2018 of Alceu Rodrigues de Freitas Junior,
-E<lt>arfreitas@cpan.orgE<gt>
+E<lt>glasswalk3r@yahoo.com.brE<gt>
 
 This file is part of App-SpamcupNG distribution.
 
