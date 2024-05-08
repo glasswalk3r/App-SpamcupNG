@@ -3,7 +3,7 @@ name: Dist::Zilla Action
 on:
   push:
     paths-ignore:
-      - '*.md'
+      - README.md
       - Makefile
       - dist.ini
       - perlcriticrc
