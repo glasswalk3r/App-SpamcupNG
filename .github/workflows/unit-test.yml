@@ -10,12 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     name: "dzil run"
     steps:
-      - name: install cpanm
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cpanminus
+      - name: Cache APT Packages
+        uses: awalsh128/cache-apt-pkgs-action@v1.4.2
+        with:
+          cpanminus
       - name: Dist::Zilla author dependencies
-        run: cpanm install Dist::Zilla::PluginBundle::Starter
+        run: sudo cpanm install Dist::Zilla::PluginBundle::Starter
       - name: Check out repository
         uses: actions/checkout@v4.1.7
       - name: Installing dependencies and testing all using dzil
