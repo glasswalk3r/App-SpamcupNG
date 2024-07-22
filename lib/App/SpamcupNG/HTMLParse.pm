@@ -4,6 +4,7 @@ use warnings;
 use HTML::TreeBuilder::XPath 0.14;
 use Exporter 'import';
 use Carp 'confess';
+use Log::Log4perl 1.57 qw(get_logger :levels);
 
 use App::SpamcupNG::Error::Factory   qw(create_error);
 use App::SpamcupNG::Warning::Factory qw(create_warning);
@@ -438,6 +439,7 @@ sub find_receivers {
     my @receivers;
     my $devnull     = q{/dev/null'ing};
     my $report_sent = 'Spam report id';
+    my $logger      = get_logger('SpamcupNG');
 
     foreach my $node (@nodes) {
         foreach my $inner ( $node->content_list() ) {
@@ -461,7 +463,11 @@ sub find_receivers {
                 $result_ref = [ $parts[6], $parts[3] ];
             }
             else {
-                warn "Unexpected receiver format: $inner";
+                $logger->fatal("Unexpected receiver format: $inner");
+                $logger->info('Logging entire HTML content for revision');
+                $logger->info($content_ref);
+                $logger->die(
+                    'Impossible to continue, try to manually report the SPAM');
             }
 
             push( @receivers, $result_ref );
