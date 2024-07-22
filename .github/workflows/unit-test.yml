@@ -18,7 +18,7 @@ jobs:
   cpanm:
     runs-on: ubuntu-latest
     steps:
-      - name: setup cpan CLI
+      - name: setup cpan
         run: |
           mkdir -p "${HOME}/.cpan/build"
           mkdir -p "${HOME}/.cpan/prefs"
