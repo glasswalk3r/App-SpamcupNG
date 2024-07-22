@@ -100,9 +100,9 @@ jobs:
           1;
           __END__
           EOT > ${HOME}/.cpan/CPAN/MyConfig.pm
-        echo 'eval "$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)"' >> "${HOME}/.bashrc"
-        echo 'CPAN_SQLITE_NO_LOG_FILES=1' >> "${HOME}/.bashrc"
-        echo 'CPAN_SQLITE_LOG_FILES_CLEANUP=1' >> "${HOME}/.bashrc"
+          echo 'eval "$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)"' >> "${HOME}/.bashrc"
+          echo 'CPAN_SQLITE_NO_LOG_FILES=1' >> "${HOME}/.bashrc"
+          echo 'CPAN_SQLITE_LOG_FILES_CLEANUP=1' >> "${HOME}/.bashrc"
       - name: Dist::Zilla author dependencies
         run: cpan install Dist::Zilla::PluginBundle::Starter
   dzil:
