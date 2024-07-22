@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Dist::Zilla author dependencies
-        run: cpanm install Dist::Zilla::PluginBundle::Starter
+        run: cpan install Dist::Zilla::PluginBundle::Starter
   dzil:
     runs-on: ubuntu-latest
     name: "dzil run"
