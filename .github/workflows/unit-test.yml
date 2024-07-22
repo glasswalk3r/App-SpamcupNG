@@ -15,9 +15,15 @@ on:
       - master
 
 jobs:
+  cpanm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dist::Zilla author dependencies
+        run: cpanm install Dist::Zilla::PluginBundle::Starter
   dzil:
     runs-on: ubuntu-latest
     name: "dzil run"
+    needs: cpanm
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
