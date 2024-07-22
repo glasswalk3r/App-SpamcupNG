@@ -12,14 +12,13 @@ jobs:
     steps:
       - name: install cpanm
         run: |
-          id
-          apt-get update
-          apt-get install -y cpanminus
+          sudo apt-get update
+          sudo apt-get install -y cpanminus
       - name: Dist::Zilla author dependencies
         run: cpanm install Dist::Zilla::PluginBundle::Starter
       - name: Check out repository
         uses: actions/checkout@v4.1.7
       - name: Installing dependencies and testing all using dzil
-        uses: jonasbn/github-action-perl-dist-zilla@0.4.0
+        uses: jonasbn/github-action-perl-dist-zilla@0.5.5
         with:
           dzil-arguments: 'test --all'
