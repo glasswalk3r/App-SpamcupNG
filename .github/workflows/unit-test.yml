@@ -12,6 +12,7 @@ jobs:
     steps:
       - name: install cpanm
         run: |
+          id
           apt-get update
           apt-get install -y cpanminus
       - name: Dist::Zilla author dependencies
