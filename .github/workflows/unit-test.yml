@@ -36,9 +36,9 @@ jobs:
             DateTime
             DBD::SQLite
             Devel::CheckOS
-            HTML::Form
-            HTTP::CookieJar::LWP
             HTTP::Cookies
+            HTTP::CookieJar::LWP
+            HTML::Form
             HTTP::Request
             HTML::TreeBuilder::XPath
             Log::Log4perl
@@ -48,6 +48,8 @@ jobs:
             Pod::Tidy
             Set::Tiny
             Test::Exception
+            Test::Pod
+            Test::Pod::Coverage
             Test::TempDir::Tiny
             YAML::XS
       - name: unit tests
