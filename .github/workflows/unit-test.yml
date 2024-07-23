@@ -33,16 +33,22 @@ jobs:
           verbose: false
           tools: >-
             Class::Accessor
+            DateTime
             DBD::SQLite
             HTML::Form
-            HTML::TreeBuilder::XPath
-            LWP::Protocol::https
+            HTTP::CookieJar::LWP
+            HTTP::Cookies
             HTTP::Request
+            HTML::TreeBuilder::XPath
+            Log::Log4perl
+            LWP::Protocol::https
+            Mozilla::PublicSuffix
             Perl::Tidy::Sweetened
             Pod::Tidy
             Set::Tiny
             Test::Exception
             Test::TempDir::Tiny
+            YAML::XS
       - name: unit tests
         run: prove -l
       - name: extended unit tests
