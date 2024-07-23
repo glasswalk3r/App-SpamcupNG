@@ -29,15 +29,20 @@ jobs:
         uses: tecolicom/actions-use-perl-tools@v1.1
         with:
           key: default
-          sudo: false
+          sudo: true
           verbose: false
           tools: >-
             Class::Accessor
             DBD::SQLite
+            HTML::Form
+            HTML::TreeBuilder::XPath
             LWP::Protocol::https
-            Pod::Tidy
+            HTTP::Request
             Perl::Tidy::Sweetened
+            Pod::Tidy
+            Set::Tiny
             Test::Exception
+            Test::TempDir::Tiny
       - name: unit tests
         run: prove -l
       - name: extended unit tests
