@@ -1,24 +1,44 @@
 ---
-name: Dist::Zilla Action
-on:
+name: Run unit tests
+on:  # yamllint disable-line rule:truthy
+  push:
+    paths-ignore:
+      - '*.md'
+      - 'Changelog'
+      - dist.ini
   pull_request:
     branches:
-      - master
+      # ignores new tags pushed
+      - '**'
 
 jobs:
-  dzil:
+  prove:
     runs-on: ubuntu-latest
-    name: "dzil run"
+    name: prove CLI execution
+    strategy:
+      matrix:
+        platform:
+          - alpine
+          - debian
+          - rockylinux
     steps:
-      - name: Installing and caching packages
-        uses: awalsh128/cache-apt-pkgs-action@v1.4.2
-        with:
-          packages: cpanminus libdist-zilla-perl
-      - name: Dist::Zilla author dependencies
-        run: sudo cpanm install Dist::Zilla::PluginBundle::Starter
-      - name: Check out repository
+      - name: Checkout
         uses: actions/checkout@v4.1.7
-      - name: Testing using dzil
-        uses: jonasbn/github-action-perl-dist-zilla@0.5.5
+        # not using Dist::Zilla here because Ebirah does not supports authordeps
+      - name: install-and-cache perl tools
+        uses: tecolicom/actions-use-perl-tools@v1.1
         with:
-          dzil-arguments: 'test --all'
+          key: default
+          sudo: false
+          verbose: false
+          tools: >-
+            Class::Accessor
+            DBD::SQLite
+            LWP::Protocol::https
+            Pod::Tidy
+            Perl::Tidy::Sweetened
+            Test::Exception
+      - name: unit tests
+        run: prove -l
+      - name: extended unit tests
+        run: prove -l xt
