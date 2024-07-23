@@ -437,9 +437,10 @@ sub find_receivers {
     $tree->parse_content($content_ref);
     my @nodes = $tree->findnodes('//*[@id="content"]');
     my @receivers;
-    my $devnull     = q{/dev/null'ing};
-    my $report_sent = 'Spam report id';
-    my $logger      = get_logger('SpamcupNG');
+    my $devnull          = q{/dev/null'ing};
+    my $report_sent      = 'Spam report id';
+    my $logger           = get_logger('SpamcupNG');
+    my $reports_disabled = 'Reports disabled for';
 
     foreach my $node (@nodes) {
         foreach my $inner ( $node->content_list() ) {
@@ -462,11 +463,20 @@ sub find_receivers {
             {
                 $result_ref = [ $parts[6], $parts[3] ];
             }
+
+            # Reports disabled for bondedsender@admin.spamcop.net
+            elsif (
+                substr( $inner, 0, length($reports_disabled) ) eq
+                $reports_disabled )
+            {
+                # must generate a random value due table PK
+                $result_ref = [ $parts[-1], join( '-', 'N/A', time() ) ];
+            }
             else {
                 $logger->fatal("Unexpected receiver format: $inner");
                 $logger->info('Logging entire HTML content for revision');
-                $logger->info($content_ref);
-                $logger->die(
+                $logger->info($$content_ref);
+                $logger->logdie(
                     'Impossible to continue, try to manually report the SPAM');
             }
 
