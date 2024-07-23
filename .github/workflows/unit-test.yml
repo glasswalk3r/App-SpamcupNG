@@ -1,27 +1,58 @@
 ---
-name: Dist::Zilla Action
-on:
+name: Run unit tests
+on:  # yamllint disable-line rule:truthy
   push:
     paths-ignore:
-      - README.md
-      - Makefile
+      - '*.md'
+      - 'Changelog'
       - dist.ini
-      - perlcriticrc
-      - perltidyrc
-      - tidyall.ini
-      - TODO.txt
   pull_request:
     branches:
-      - master
+      # ignores new tags pushed
+      - '**'
 
 jobs:
-  dzil:
+  prove:
     runs-on: ubuntu-latest
-    name: "dzil run"
+    name: prove CLI execution
+    strategy:
+      matrix:
+        platform:
+          - alpine
+          - debian
+          - rockylinux
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Installing dependencies and testing all using dzil
-        uses: jonasbn/github-action-perl-dist-zilla@0.4.0
+      - name: Checkout
+        uses: actions/checkout@v4.1.7
+        # not using Dist::Zilla here because Ebirah does not supports authordeps
+      - name: install-and-cache perl tools
+        uses: tecolicom/actions-use-perl-tools@v1.1
         with:
-          dzil-arguments: 'test --all'
+          key: default
+          sudo: true
+          verbose: false
+          tools: >-
+            Class::Accessor
+            DateTime
+            DBD::SQLite
+            Devel::CheckOS
+            HTTP::Cookies
+            HTTP::CookieJar::LWP
+            HTML::Form
+            HTTP::Request
+            HTML::TreeBuilder::XPath
+            Log::Log4perl
+            LWP::Protocol::https
+            Mozilla::PublicSuffix
+            Perl::Tidy::Sweetened
+            Pod::Tidy
+            Set::Tiny
+            Test::Exception
+            Test::Pod
+            Test::Pod::Coverage
+            Test::TempDir::Tiny
+            YAML::XS
+      - name: unit tests
+        run: prove -l
+      - name: extended unit tests
+        run: prove -l xt
