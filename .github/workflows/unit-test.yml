@@ -35,6 +35,7 @@ jobs:
             Class::Accessor
             DateTime
             DBD::SQLite
+            Devel::CheckOS
             HTML::Form
             HTTP::CookieJar::LWP
             HTTP::Cookies
