@@ -404,7 +404,7 @@ sub main_loop {
 
         foreach my $error ( @{$errors_ref} ) {
             if ( $error->is_fatal() ) {
-                $logger->die( $error->message() );
+                $logger->fatal( $error->message() );
 
                 # must stop processing the HTML for this report and move to next
                 return 0;
